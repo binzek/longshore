@@ -68,5 +68,5 @@ export const SEA = {
   waveHeight: 0.45,
   waveSpeed: 1,
   calmFactor: 0.4, // wave height and speed are scaled by this under prefers-reduced-motion
-  riseMax: 0.7, // how far the sea climbs up the beach for a fully broken coast (the 2050 jump)
+  riseMax: 1.3, // how far the sea climbs up the beach for a fully broken coast (the 2050 jump)
 } as const;

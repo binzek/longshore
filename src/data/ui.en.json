@@ -7,7 +7,7 @@
   },
   "finish": {
     "button": "Jump to 2050",
-    "hint": "Roles you leave alone are played by bots"
+    "hint": "Untouched roles are played by bots"
   },
   "jump": {
     "caption": "The years pass."
