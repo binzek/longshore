@@ -8,6 +8,7 @@ import { debugAnchorMarkers, debugExpose, debugStartX } from './debug';
 import { ROLE_ANCHORS, anchorPosition } from './layout';
 import { createLights } from './lights';
 import { PALETTE, color } from './palette';
+import { createProps } from './props';
 import { toScreen, type ScreenPoint } from './project';
 import { createSea } from './sea';
 import { createSky } from './sky';
@@ -43,7 +44,8 @@ export function createWorld(container: HTMLElement): World {
   const sky = createSky();
   const terrain = createTerrain();
   const sea = createSea(calm);
-  scene.add(sky, terrain.mesh, sea.mesh, createLights());
+  const props = createProps(calm);
+  scene.add(sky, terrain.mesh, sea.mesh, props.group, createLights());
 
   const markers = debugAnchorMarkers();
   if (markers) scene.add(markers);
@@ -68,11 +70,11 @@ export function createWorld(container: HTMLElement): World {
   let markFirstFrame: () => void = () => {};
   const firstFrame = new Promise<void>((resolve) => (markFirstFrame = resolve));
 
-  // Where each marker hovers: its anchor spot, lifted a little. Worked out once.
+  // Where each marker hovers: just above the top of its role's prop. Worked out once.
   const markerSpots = new Map<RoleId, Vector3>(
     ROLE_ANCHORS.map((anchor) => {
       const { x, y, z } = anchorPosition(anchor);
-      return [anchor.id, new Vector3(x, y + MARKERS.lift, z)];
+      return [anchor.id, new Vector3(x, y + props.heights[anchor.id] + MARKERS.clearance, z)];
     }),
   );
   const scratch = new Vector3();
@@ -90,6 +92,7 @@ export function createWorld(container: HTMLElement): World {
     timer.update(time);
     rig.update(timer.getDelta());
     sea.update(timer.getElapsed());
+    props.update(timer.getElapsed());
     sky.position.copy(camera.position); // the dome travels with the camera: no visible edge
     renderer.render(scene, camera);
     for (const listener of frameListeners) listener();
@@ -108,6 +111,7 @@ export function createWorld(container: HTMLElement): World {
       rig.dispose();
       timer.dispose();
       terrain.dispose();
+      props.dispose();
       sea.dispose();
       renderer.dispose();
       renderer.domElement.remove();

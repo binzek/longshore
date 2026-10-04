@@ -5,7 +5,7 @@
 // shoreline runs diagonally across the screen (sand in front, sea behind).
 export const CAMERA = {
   fov: 50, // vertical, degrees (landscape and desktop)
-  fovPortrait: 68, // wider on tall phone screens, so more of the coast fits across the narrow width
+  fovPortrait: 76, // wider on tall phone screens, so more of the coast fits across the narrow width
   near: 0.5,
   far: 900,
   height: 9, // metres above sea level
@@ -24,7 +24,7 @@ export const PAN = {
 
 // The glass markers that float over each role's spot (see src/ui/markers.ts).
 export const MARKERS = {
-  lift: 4.5, // metres above the anchor, so the marker hovers over the spot, not on it
+  clearance: 1.8, // metres above the top of the role's prop, so the marker hovers over it
   edgeMargin: 40, // px past the screen edge before a marker counts as off screen and hides
 } as const;
 
