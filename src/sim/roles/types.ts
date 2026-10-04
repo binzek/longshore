@@ -21,6 +21,8 @@ export interface Effect {
 }
 
 // ---- Decisions: one decision is one widget on a role's panel ----
+// Every `default` below is the gentle fallback: never shown as selected (Wajid wants the raw,
+// unselected feel), but it is what anything the player left unanswered becomes at lock-in or timeout.
 
 /** Which act a decision belongs to. M1 only has Act 1; Act 2 content arrives in M3. */
 export type Act = 1 | 2;
@@ -38,7 +40,10 @@ export interface ToggleOption {
 /** One either/or (or pick-one-of-three) switch inside a toggleSet. */
 export interface Toggle {
   id: string;
-  /** Not shown to players, who start with nothing picked. Used where a complete answer is needed anyway (bots, simulate(), tests). */
+  /**
+   * The gentle option. Never pre-selected on screen (players see nothing chosen), but it is what
+   * a toggle nobody picked becomes when the answer is locked in or the timer runs out.
+   */
   default: string;
   options: ToggleOption[];
 }

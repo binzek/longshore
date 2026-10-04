@@ -11,7 +11,10 @@ function snap(value: unknown, min: number, max: number, step: number, fallback: 
   return Math.min(max, Math.max(min, snapped));
 }
 
-/** A complete answer built from the defaults, for the bots, simulate() and tests. Players themselves start with nothing chosen. */
+/**
+ * A complete answer built from the gentle defaults: what anything a player left unanswered becomes
+ * at lock-in or timeout (and what the bots and tests start from). Players see nothing pre-selected.
+ */
 export function defaultChoice(decision: Decision): Choice {
   const decisionId = decision.id;
   switch (decision.widget) {
@@ -126,8 +129,9 @@ export function choiceEffect(decision: Decision, choice: Choice | undefined): Ef
 
 /**
  * The total effect of everything a role chose in one act, for the sim and the bots. A decision with
- * no answer counts as its default so the result is always complete; players themselves start with
- * nothing chosen (see the answered* helpers below).
+ * no answer counts as its gentle default so the result is always complete, which is also what
+ * lock-in and the timer do with anything a player left unanswered. (The panel itself shows only
+ * what the player has chosen: see the answered* helpers below.)
  */
 export function actEffect(role: RoleConfig, act: Act, choices: readonly Choice[]): Effect {
   let total = NO_EFFECT;
