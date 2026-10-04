@@ -20,6 +20,11 @@ export function debugStartX(): number | null {
   return value === null || value === undefined ? null : Number(value);
 }
 
+/** Puts objects on `window.__longshore` so we can inspect them from the browser console. */
+export function debugExpose(objects: Record<string, unknown>): void {
+  if (import.meta.env.DEV) Object.assign(window, { __longshore: objects });
+}
+
 export function debugAnchorMarkers(): Group | null {
   if (!params?.has('anchors')) return null;
   const group = new Group();

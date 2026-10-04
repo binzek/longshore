@@ -43,7 +43,7 @@ export function createTerrain(): Terrain {
         // Beach: damp at the waterline, drying out inland.
         tone = wetSand.clone().lerp(sand, smoothstep(0.3, 3.5, inland));
         // Grass takes over further inland. The noise makes the edge ragged, not a straight line.
-        const grass = smoothstep(15, 27, inland + (speckle - 0.5) * 10 + wobble(x, z) * 4);
+        const grass = smoothstep(18, 23, inland + (speckle - 0.5) * 8 + wobble(x, z) * 4);
         tone.lerp(leaf, grass);
         tone.lerp(darkLeaf, smoothstep(2.5, 7, height)); // hills read darker and further away
       }

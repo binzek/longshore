@@ -1,9 +1,9 @@
 // Builds the always-on 3D backdrop: renderer, camera, sky, ground, sea, lights, and the render loop.
 // It only draws. It never reads game state yet (later the sim's output will drive it).
 import { Fog, PerspectiveCamera, Scene, Timer, WebGLRenderer } from 'three';
-import { placeCamera } from './camera';
+import { createCameraRig } from './cameraRig';
 import { CAMERA, FOG } from './config';
-import { debugAnchorMarkers, debugStartX } from './debug';
+import { debugAnchorMarkers, debugExpose, debugStartX } from './debug';
 import { createLights } from './lights';
 import { PALETTE, color } from './palette';
 import { createSea } from './sea';
@@ -25,7 +25,8 @@ export function createWorld(container: HTMLElement): World {
   scene.fog = new Fog(color(PALETTE.haze), FOG.near, FOG.far);
 
   const camera = new PerspectiveCamera(CAMERA.fov, 1, CAMERA.near, CAMERA.far);
-  placeCamera(camera, debugStartX() ?? CAMERA.startX);
+  const rig = createCameraRig(camera, renderer.domElement, debugStartX() ?? CAMERA.startX);
+  debugExpose({ rig });
 
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sky = createSky();
@@ -53,6 +54,7 @@ export function createWorld(container: HTMLElement): World {
 
   renderer.setAnimationLoop((time) => {
     timer.update(time);
+    rig.update(timer.getDelta());
     sea.update(timer.getElapsed());
     sky.position.copy(camera.position); // the dome travels with the camera: no visible edge
     renderer.render(scene, camera);
@@ -62,6 +64,7 @@ export function createWorld(container: HTMLElement): World {
     dispose() {
       renderer.setAnimationLoop(null);
       observer.disconnect();
+      rig.dispose();
       timer.dispose();
       terrain.dispose();
       sea.dispose();

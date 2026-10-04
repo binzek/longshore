@@ -15,6 +15,12 @@ export const CAMERA = {
   startX: -20, // where along the coast the game opens (the shack is near the middle of the view)
 } as const;
 
+export const PAN = {
+  focusDistance: 26, // metres ahead of the camera whose ground should track the finger 1:1
+  keySpeed: 25, // metres per second while an arrow key is held
+  wheelPush: 0.2, // metres/second of extra speed per wheel pixel
+} as const;
+
 export const FOG = {
   near: 80, // clear for the beach and nearby sea, then haze builds towards the horizon
   far: 230,
