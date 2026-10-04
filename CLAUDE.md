@@ -22,7 +22,7 @@ Minimal, glassy, serif UI over an always-visible flat-shaded low-poly 3D coast. 
 
 ## Stack and commands
 
-TypeScript (strict) + Vite + plain Three.js (exact pin, `0.186.1`) + Howler + Vitest + Prettier. Supabase client is installed for M4 but unused until then. Not installed yet: GSAP (undecided, CSS may be enough; `npm i gsap`).
+TypeScript (strict) + Vite + plain Three.js (exact pin, `0.186.1`) + Howler + Vitest + Prettier. Supabase client is installed for M4 but unused until then. Not installed: GSAP (CSS transitions were enough for M0; add it with `npm i gsap` only if a later animation needs it).
 
 | Command                                   | What it does                                                   |
 | ----------------------------------------- | -------------------------------------------------------------- |
@@ -40,6 +40,7 @@ Windows pitfall: if a shell's working directory is spelled with a lowercase driv
 
 - `main` is always deployable. All work happens on branches, promoted to `main` after a playthrough (plan section 0, rule 1).
 - Hosting: Vercel (Hobby), deployed from GitHub via the Vercel dashboard import, so every branch gets a preview URL. Hobby is free for personal non-commercial use with 100 GB bandwidth per month (per Vercel docs, checked 2026-10-04; re-check before launch). If bandwidth ever becomes a problem, Cloudflare Pages is the fallback.
+- Preview URLs are public: Wajid switched Vercel Authentication off on 2026-10-04, so anyone with a preview link can open it. Keep nothing private on a branch. To find a branch's preview URL without the `gh` CLI (not installed here): `curl https://api.github.com/repos/binzek/longshore/deployments?sha=<commit>`, then `.../deployments/<id>/statuses` and read `environment_url`.
 - No hosting config file is needed: Vercel auto-detects Vite (build `npm run build`, output `dist`). Node is pinned to `24.x` in `package.json` (same as CI).
 - Production URL: **https://longshore.binzek.com**. DNS lives on Cloudflare: a `CNAME` named `longshore` pointing at the project-specific target Vercel shows under Settings > Domains, with the Cloudflare proxy **off** ("DNS only", grey cloud) so Vercel can issue and renew the TLS certificate.
 
@@ -72,4 +73,10 @@ Technical baseline done (2026-10-04): project scaffolded, deps installed, CI wri
 
 Live (2026-10-04): the baseline is deployed at https://longshore.binzek.com from `github.com/binzek/longshore` (remote `origin` uses SSH). Checked on a 390x844 phone viewport: page renders, shows "three r186 · WebGL 2 ok", no console messages. The first GitHub Actions run (format, typecheck, tests, build on Linux) passed.
 
-Next step is M0 (first impression: scaffold + backdrop), started by Wajid in a separate chat. Do M0 on a branch; the Vercel preview URL for it is the playthrough check before promoting to `main`.
+M0 done (2026-10-04): a title screen (tagline in `src/data/narration.en.json`, loading bar tracking four real loads, glass Begin button) over an always-on low-poly coast. Wajid's choices: camera stands inland on the beach looking out to sea at an angle, sand in the foreground and sea behind; sound is synthesised in code (no files); Fraunces for titles and Newsreader for text and numbers (Newsreader digits are tabular, Fraunces digits are not, so never use Fraunces for changing numbers). Playthrough passed on Wajid's phone via the Vercel preview, then merged to `main`.
+
+Where things are: `src/scene/` (sky, sea, terrain, camera rig and pan feel, `coastShape.ts` for the one shared shape of the coast, `layout.ts` for where the five roles sit along it, `config.ts` for tunable numbers), `src/audio/` (surf ambience, remembered on/off), `src/ui/` (title screen, sound toggle, shared `.glass` style in `style.css`). Development helpers, active only on `npm run dev`: `?anchors` draws a post on each role spot, `?camx=NN` starts the camera at that position along the coast, and `window.__longshore` exposes the camera rig and audio for the browser console. `src/sim` is untouched apart from the RNG.
+
+Not yet measured: frame rate on a real mid-range phone (the ~144 fps seen in tests is a desktop GPU). The sea volume is the `LEVEL` constant in `src/audio/ambience.ts`.
+
+Next is M1 (decision toy: glass markers on the five roles, panels, bots, lock-in). Wajid decides when it starts; follow the one-step-at-a-time agreement and say plainly at each step what is being added and what the next step is.
