@@ -1,5 +1,5 @@
 /* Palette fallbacks for the very first paint. The real values come from src/scene/palette.ts,
-   which writes the same variables onto <html> at startup. Fonts and glass panels come in M0 step 4. */
+   which writes the same variables onto <html> at startup. */
 :root {
   --haze: #ecd3b0;
   --sky: #7da3b4;
@@ -7,6 +7,13 @@
   --sand: #dcc496;
   --leaf: #5d7c58;
   --ink: #1e2f36;
+
+  /* Display serif for titles and narration, text serif for panels and numbers (plan 7.2).
+     Checked in the browser: Newsreader digits are all the same width, so numbers that tick up and
+     down do not jitter. Fraunces digits are not (and tabular-nums does nothing), so never use
+     --font-display for changing numbers. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-text: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
 * {
@@ -21,7 +28,7 @@ body {
   /* Shown for a moment before the 3D scene draws: sky into haze into sea, like the scene itself. */
   background: linear-gradient(to bottom, var(--sky), var(--haze) 45%, var(--sea));
   color: var(--ink);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-text);
 }
 
 /* The 3D coast is always on screen, behind everything. 100dvh follows phone browser toolbars. */

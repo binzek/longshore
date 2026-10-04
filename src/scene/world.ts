@@ -11,6 +11,8 @@ import { createSky } from './sky';
 import { createTerrain } from './terrain';
 
 export interface World {
+  /** Resolves once the first frame has been drawn (the loading bar waits for it). */
+  firstFrame: Promise<void>;
   dispose(): void;
 }
 
@@ -52,15 +54,20 @@ export function createWorld(container: HTMLElement): World {
   const timer = new Timer();
   timer.connect(document);
 
+  let markFirstFrame: () => void = () => {};
+  const firstFrame = new Promise<void>((resolve) => (markFirstFrame = resolve));
+
   renderer.setAnimationLoop((time) => {
     timer.update(time);
     rig.update(timer.getDelta());
     sea.update(timer.getElapsed());
     sky.position.copy(camera.position); // the dome travels with the camera: no visible edge
     renderer.render(scene, camera);
+    markFirstFrame(); // does nothing after the first call
   });
 
   return {
+    firstFrame,
     dispose() {
       renderer.setAnimationLoop(null);
       observer.disconnect();

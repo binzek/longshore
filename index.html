@@ -11,10 +11,35 @@
       name="description"
       content="Longshore: a short multiplayer climate game on the Kozhikode coast."
     />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Longshore</title>
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- Title screen. Plain HTML so it paints before any JavaScript has loaded.
+         src/ui/titleScreen.ts fills in the tagline, drives the bar and handles Begin. -->
+    <section class="title" id="title" aria-labelledby="title-name">
+      <header class="title__head">
+        <h1 class="title__name" id="title-name">Longshore</h1>
+        <p class="title__tagline" id="title-tagline"></p>
+      </header>
+      <div class="title__action">
+        <div
+          class="loader"
+          id="loader"
+          role="progressbar"
+          aria-label="Loading the coast"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span class="loader__fill"></span>
+        </div>
+        <button class="begin" id="begin" type="button">Begin</button>
+      </div>
+    </section>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
