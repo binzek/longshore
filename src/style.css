@@ -21,8 +21,11 @@
 }
 
 /* Glass: translucent, blurred scene behind, thin light border, very soft shadow (plan 7.2).
-   Used on a few small surfaces only, since backdrop-filter is costly on low-end phones. */
+   Used on a few small surfaces only, since backdrop-filter is costly on low-end phones.
+   touch-action: manipulation stops double-tap zoom on buttons; pinch-zoom stays available for
+   anyone who needs it (the canvas itself blocks gestures so that dragging pans the coast). */
 .glass {
+  touch-action: manipulation;
   background: rgb(255 250 240 / 0.3);
   border: 1px solid rgb(255 250 240 / 0.6);
   box-shadow: 0 6px 24px rgb(30 47 54 / 0.12);
