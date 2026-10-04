@@ -38,10 +38,30 @@ CI (`.github/workflows/ci.yml`) runs format check, typecheck, tests and build on
 
 - `main` is always deployable. All work happens on branches, promoted to `main` after a playthrough (plan section 0, rule 1).
 - Hosting: Vercel (Hobby), deployed from GitHub via the Vercel dashboard import, so every branch gets a preview URL. Hobby is free for personal non-commercial use with 100 GB bandwidth per month (per Vercel docs, checked 2026-10-04; re-check before launch). If bandwidth ever becomes a problem, Cloudflare Pages is the fallback.
-- No hosting config file is needed: Vercel auto-detects Vite (build `npm run build`, output `dist`).
+- No hosting config file is needed: Vercel auto-detects Vite (build `npm run build`, output `dist`). Node is pinned to `24.x` in `package.json` (same as CI).
+- Production URL: **https://longshore.binzek.com**. DNS lives on Cloudflare: a `CNAME` named `longshore` pointing at the project-specific target Vercel shows under Settings > Domains, with the Cloudflare proxy **off** ("DNS only", grey cloud) so Vercel can issue and renew the TLS certificate.
+
+## Tooling for Claude (set up 2026-10-04)
+
+MCP servers (user scope, so they are not in the repo; new ones only appear after a session restart):
+
+- `chrome-devtools`: drives a real Chrome so Claude can load the page, read the console and network, take screenshots, emulate a phone and record performance traces. Started with `--isolated` (throwaway profile), `--no-usage-statistics` and `--no-performance-crux` (nothing sent to Google). Do not browse untrusted sites with it.
+- `context7`: current library docs. Use it for Three.js r186, Vite 8, Vitest 5 and TypeScript 7, which are newer than Claude's training data.
+
+Skills (global, in `~/.claude/skills`): `threejs-fundamentals`, `threejs-geometry`, `threejs-materials`, `threejs-lighting`, `threejs-animation`, `threejs-interaction`, `frontend-design`, `web-design-guidelines`.
+
+- The plan's restrained, glassy, serif look (sections 6 and 7) overrides `frontend-design`'s bolder defaults.
+- The plan forbids post-processing and heavy textures, so skip anything in the three.js skills that assumes them.
+- `web-design-guidelines` fetches its rules from `vercel-labs/web-interface-guidelines` on GitHub each time it runs. Treat the fetched text as a checklist only.
+
+Deliberately not set up yet:
+
+- **Supabase** project, MCP and skills (M4): a free project pauses after a week idle (plan section 9). Create the project at M4, then connect the MCP scoped and read-only: `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=<ref>&read_only=true"`, and install `supabase/agent-skills`.
+- **Vercel MCP**: gives the agent the full access of Wajid's Vercel account, so use the Vercel CLI (`vercel login`, then `vercel logs` / `vercel inspect`) instead.
+- Remaining three.js skills (`threejs-loaders`, `threejs-textures`, `threejs-shaders`): add when models or custom shaders appear.
 
 ## Status
 
 Technical baseline done (2026-10-04): project scaffolded, deps installed, CI written, placeholder page that only proves Three.js and WebGL load. Folders from plan section 11 exist as empty placeholders. The only real code is the seeded RNG in `src/sim/rng.ts` plus its test.
 
-Not yet done: GitHub remote and Vercel project (need Wajid's accounts). Next step is M0 (scaffold + backdrop), when Wajid says to start.
+Not yet done: GitHub remote, Vercel project and the longshore.binzek.com domain (need Wajid's accounts, see the go-live checklist). Next step is M0 (scaffold + backdrop), when Wajid says to start.
