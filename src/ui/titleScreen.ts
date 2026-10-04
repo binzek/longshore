@@ -10,6 +10,9 @@ export interface TitleScreen {
   revealText(): void;
   /** Swap the loading bar for the Begin button. */
   showBegin(): void;
+  /** Run `handler` the moment the player taps Begin. It runs inside the tap itself, which is what
+   *  browsers require before they will play sound. */
+  onBegin(handler: () => void): void;
   /** Remove the screen immediately (used when the coast cannot be drawn at all). */
   dismiss(): void;
 }
@@ -26,8 +29,11 @@ export function initTitleScreen(): TitleScreen {
     root.hidden = true;
   };
 
+  const beginHandlers: (() => void)[] = [];
+
   begin.addEventListener('click', () => {
     begin.disabled = true; // a double tap must not run this twice
+    for (const handler of beginHandlers) handler(); // inside the tap, so sound is allowed
     root.classList.add('is-leaving');
     // Remove it once the fade finishes. transitionend also bubbles up from child elements, so only
     // react to the screen's own opacity. The timeout is a fallback in case the event never fires.
@@ -57,6 +63,9 @@ export function initTitleScreen(): TitleScreen {
     },
     showBegin() {
       root.classList.add('is-loaded');
+    },
+    onBegin(handler) {
+      beginHandlers.push(handler);
     },
     dismiss,
   };

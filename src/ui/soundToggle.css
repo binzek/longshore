@@ -1,0 +1,56 @@
+/* Round glass sound button, top-right. It appears once the player has tapped Begin. */
+.sound-toggle {
+  position: fixed;
+  top: max(0.9rem, env(safe-area-inset-top));
+  right: max(0.9rem, env(safe-area-inset-right));
+  z-index: 20; /* above the title screen, which is z-index 10 */
+  display: grid;
+  place-items: center;
+  width: 2.75rem; /* 44 px: a comfortable tap target */
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.8s ease,
+    visibility 0.8s;
+}
+
+.sound-toggle.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sound-toggle:active {
+  transform: scale(0.96);
+}
+
+.sound-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Thin-line icons: drawn with strokes, no fill. */
+.sound-toggle svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sound-toggle[aria-pressed='true'] .icon-off,
+.sound-toggle[aria-pressed='false'] .icon-on {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sound-toggle {
+    transition-duration: 0.01s;
+  }
+}

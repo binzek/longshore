@@ -111,23 +111,10 @@
   text-indent: 0.3em; /* balances the trailing letter spacing */
   text-transform: uppercase;
   color: var(--ink);
-  /* Glass: translucent, blurred scene behind, thin light border, very soft shadow. */
-  background: rgb(255 250 240 / 0.3);
-  border: 1px solid rgb(255 250 240 / 0.6);
-  border-radius: 999px;
-  box-shadow: 0 6px 24px rgb(30 47 54 / 0.12);
-  -webkit-backdrop-filter: blur(10px) saturate(1.15);
-  backdrop-filter: blur(10px) saturate(1.15);
+  border-radius: 999px; /* the glass look itself comes from the shared .glass class */
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-}
-
-/* Browsers without backdrop-filter get a solid, still slightly see-through surface. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .begin {
-    background: rgb(244 232 212 / 0.88);
-  }
 }
 
 .begin:active {

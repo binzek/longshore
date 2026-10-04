@@ -22,7 +22,9 @@ export function debugStartX(): number | null {
 
 /** Puts objects on `window.__longshore` so we can inspect them from the browser console. */
 export function debugExpose(objects: Record<string, unknown>): void {
-  if (import.meta.env.DEV) Object.assign(window, { __longshore: objects });
+  if (!import.meta.env.DEV) return;
+  const existing = (window as { __longshore?: Record<string, unknown> }).__longshore;
+  Object.assign(window, { __longshore: { ...existing, ...objects } });
 }
 
 export function debugAnchorMarkers(): Group | null {

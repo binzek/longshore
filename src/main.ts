@@ -1,8 +1,12 @@
 import '@fontsource/fraunces/latin-300.css'; // title and buttons
 import '@fontsource/newsreader/latin-400-italic.css'; // tagline
 import './style.css';
+import { createAmbience } from './audio/ambience';
+import { loadSoundOn, saveSoundOn } from './audio/preference';
 import { applyPaletteToCss } from './scene/palette';
+import { debugExpose } from './scene/debug';
 import { createWorld } from './scene/world';
+import { createSoundToggle } from './ui/soundToggle';
 import { initTitleScreen } from './ui/titleScreen';
 
 const app = document.querySelector<HTMLElement>('#app');
@@ -10,6 +14,24 @@ if (!app) throw new Error('Missing #app element in index.html');
 
 applyPaletteToCss();
 const title = initTitleScreen();
+
+// Sound: silent until the player taps Begin (browsers insist on a tap), then a quiet sea.
+// The on/off choice is remembered between visits.
+const ambience = createAmbience();
+const soundOn = loadSoundOn();
+ambience.setEnabled(soundOn);
+const soundToggle = createSoundToggle({
+  on: soundOn,
+  onChange: (on) => {
+    saveSoundOn(on);
+    ambience.setEnabled(on);
+  },
+});
+title.onBegin(() => {
+  ambience.start();
+  soundToggle.show();
+});
+debugExpose({ ambience });
 
 // The loading bar waits for four real things: two fonts, the coast being built, its first frame.
 const LOAD_STEPS = 4;
