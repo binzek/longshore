@@ -34,6 +34,8 @@ TypeScript (strict) + Vite + plain Three.js (exact pin, `0.186.1`) + Howler + Vi
 
 CI (`.github/workflows/ci.yml`) runs format check, typecheck, tests and build on every push to `main` and every PR. Keep it green.
 
+Windows pitfall: if a shell's working directory is spelled with a lowercase drive letter (`c:\Users\...`), `npm test` fails every test file with `Cannot read properties of undefined (reading 'config')` (Vitest loads two copies of itself). `C:\Users\...` works. The shell Claude Code starts in can use the lowercase form, so `cd C:\Users\abdul\Workspace\longshore` first, and never pipe `npm test` into `grep` (it hides the exit code).
+
 ## Branches and hosting
 
 - `main` is always deployable. All work happens on branches, promoted to `main` after a playthrough (plan section 0, rule 1).
