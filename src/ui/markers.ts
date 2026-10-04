@@ -10,7 +10,10 @@ import './markers.css';
 export interface MarkerSpot {
   x: number;
   y: number;
+  /** Worth showing. Off the edge it fades out. */
   visible: boolean;
+  /** In front of the camera. Only then do x and y mean anything. */
+  inFront: boolean;
 }
 
 export interface RoleMarkers {
@@ -103,7 +106,9 @@ export function createRoleMarkers(options: {
       for (const marker of markers) {
         const spot = project(marker.id);
         marker.root.classList.toggle('is-on-screen', spot.visible);
-        if (!spot.visible) continue; // nothing to place; it is hidden
+        // Keep following the spot even while the marker fades out past an edge (its caption is wider
+        // than the margin, so it must not freeze there). Behind the camera there is nothing to follow.
+        if (!spot.inFront) continue;
         // Only touch the DOM when it moved (a still camera costs nothing).
         if (Math.abs(spot.x - marker.x) < 0.1 && Math.abs(spot.y - marker.y) < 0.1) continue;
         marker.x = spot.x;

@@ -7,8 +7,10 @@ export interface ScreenPoint {
   x: number;
   /** Pixels from the top of the container. */
   y: number;
-  /** In front of the camera and not further than `margin` px past an edge. */
+  /** In front of the camera and not further than `margin` px past an edge: worth showing. */
   visible: boolean;
+  /** In front of the camera at all. Behind it, x and y mean nothing. */
+  inFront: boolean;
 }
 
 export function toScreen(
@@ -23,5 +25,5 @@ export function toScreen(
   const y = (-ndcY * 0.5 + 0.5) * height;
   const inFront = ndcZ < 1;
   const inside = x > -margin && x < width + margin && y > -margin && y < height + margin;
-  return { x, y, visible: inFront && inside };
+  return { x, y, visible: inFront && inside, inFront };
 }

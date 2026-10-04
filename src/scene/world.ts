@@ -78,7 +78,7 @@ export function createWorld(container: HTMLElement): World {
   const scratch = new Vector3();
   const projectRole = (id: RoleId): ScreenPoint => {
     const spot = markerSpots.get(id);
-    if (!spot) return { x: 0, y: 0, visible: false };
+    if (!spot) return { x: 0, y: 0, visible: false, inFront: false };
     // project() uses the camera's matrices, which render() refreshes: so call this after render().
     scratch.copy(spot).project(camera);
     return toScreen(scratch.x, scratch.y, scratch.z, width, height, MARKERS.edgeMargin);
