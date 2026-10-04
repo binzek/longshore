@@ -3,7 +3,8 @@
 //   ?anchors      draws a coloured post on each role anchor
 //   ?camx=30      starts the camera at x = 30 along the coast
 import { CylinderGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
-import { ROLE_ANCHORS, anchorPosition, type RoleId } from './layout';
+import type { RoleId } from '../sim/roles/types';
+import { ROLE_ANCHORS, anchorPosition } from './layout';
 
 const MARKER_COLOURS: Record<RoleId, number> = {
   nursery: 0x2e9d4f, // green

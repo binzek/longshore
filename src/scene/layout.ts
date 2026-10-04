@@ -4,9 +4,8 @@
 //
 // Left to right along the pan axis, matching plan section 6.1:
 // mangrove estuary | houses behind the shore | beach shack | panchayat office by the jetty | boat
+import type { RoleId } from '../sim/roles/types';
 import { shoreZ, terrainHeight } from './coastShape';
-
-export type RoleId = 'nursery' | 'household' | 'shack' | 'panchayat' | 'fisher';
 
 export interface RoleAnchor {
   id: RoleId;

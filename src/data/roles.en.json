@@ -1,0 +1,127 @@
+{
+  "fisher": {
+    "label": "Fisher",
+    "scoreName": "Income",
+    "blurb": "You work the water off the jetty.",
+    "decisions": {
+      "haul": {
+        "title": "The day's haul",
+        "prompt": "Which net do you cast?",
+        "labels": {
+          "mesh": "Mesh size",
+          "mesh.small": "Small",
+          "mesh.medium": "Medium",
+          "mesh.large": "Large"
+        }
+      },
+      "ban": {
+        "title": "The monsoon ban",
+        "prompt": "The ban window is open. Do you keep to it?",
+        "labels": {
+          "window": "The ban",
+          "window.skip": "Fish anyway",
+          "window.observe": "Keep to it"
+        }
+      },
+      "gear": {
+        "title": "Your gear",
+        "prompt": "What do you take out on the boat?",
+        "labels": {
+          "gear": "Gear",
+          "gear.net": "Nets",
+          "gear.line": "Hand lines"
+        }
+      }
+    }
+  },
+  "shack": {
+    "label": "Beach shack owner",
+    "scoreName": "Profit",
+    "blurb": "Your shack feeds the evening crowd on the sand.",
+    "decisions": {
+      "menu": {
+        "title": "Your shack",
+        "prompt": "How do you run it this season?",
+        "labels": {
+          "plates": "Plates",
+          "plates.single": "Single-use",
+          "plates.steel": "Steel",
+          "fish": "Fish",
+          "fish.trucked": "Trucked in",
+          "fish.local": "From the boats",
+          "cooling": "Cooling",
+          "cooling.ac": "Air conditioning",
+          "cooling.fans": "Fans and shade"
+        }
+      }
+    }
+  },
+  "household": {
+    "label": "Household",
+    "scoreName": "Comfort and savings",
+    "blurb": "A family home just behind the shore.",
+    "decisions": {
+      "budget": {
+        "title": "The monthly budget",
+        "prompt": "Where does the money go? What you keep is savings.",
+        "labels": {
+          "food": "Takeaway food",
+          "water": "Bottled water",
+          "transport": "Private vehicle",
+          "cooling": "Air conditioning",
+          "unspent": "Savings"
+        }
+      }
+    }
+  },
+  "nursery": {
+    "label": "Mangrove nursery",
+    "scoreName": "Funding and goodwill",
+    "blurb": "A small NGO raising saplings at the estuary.",
+    "decisions": {
+      "saplings": {
+        "title": "Planting",
+        "prompt": "How many saplings do you plant this season?",
+        "labels": {
+          "value": "Saplings"
+        }
+      },
+      "site": {
+        "title": "The site",
+        "prompt": "Where do they go in the ground?",
+        "labels": {
+          "site": "Site",
+          "site.beach": "Open beach",
+          "site.mudflat": "Mudflat"
+        }
+      },
+      "followup": {
+        "title": "Afterwards",
+        "prompt": "What happens once they are planted?",
+        "labels": {
+          "followup": "Follow-up",
+          "followup.moveOn": "Move on",
+          "followup.survey": "Check on them"
+        }
+      }
+    }
+  },
+  "panchayat": {
+    "label": "Panchayat officer",
+    "scoreName": "Popularity",
+    "blurb": "You answer to everyone in the village.",
+    "decisions": {
+      "policy": {
+        "title": "This year's policy",
+        "prompt": "Choose one.",
+        "labels": {
+          "seawall": "Seawall",
+          "wasteDrive": "Waste drive",
+          "fishingBan": "Fishing ban window",
+          "setback": "Setback rule",
+          "relocation": "Relocation scheme"
+        }
+      }
+    }
+  }
+}
