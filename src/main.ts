@@ -4,6 +4,7 @@ import '@fontsource/newsreader/latin-400.css'; // panel text and numbers
 import './style.css';
 import { createAmbience } from './audio/ambience';
 import { loadSoundOn, saveSoundOn } from './audio/preference';
+import { createSfx } from './audio/sfx';
 import { createChoiceStore } from './game/choiceStore';
 import narration from './data/narration.en.json';
 import uiText from './data/ui.en.json';
@@ -27,13 +28,16 @@ const title = initTitleScreen();
 // Sound: silent until the player taps Begin (browsers insist on a tap), then a quiet sea.
 // The on/off choice is remembered between visits.
 const ambience = createAmbience();
+const sfx = createSfx(); // the soft interface sounds follow the same on/off toggle
 const soundOn = loadSoundOn();
 ambience.setEnabled(soundOn);
+sfx.setEnabled(soundOn);
 const soundToggle = createSoundToggle({
   on: soundOn,
   onChange: (on) => {
     saveSoundOn(on);
     ambience.setEnabled(on);
+    sfx.setEnabled(on);
   },
 });
 title.onBegin(() => {
@@ -76,6 +80,7 @@ requestAnimationFrame(() =>
       const store = createChoiceStore();
       const panel = createRolePanel({
         store,
+        sfx,
         onClose: (id) => {
           markers.select(null);
           markers.focus(id);

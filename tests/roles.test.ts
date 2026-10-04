@@ -9,6 +9,7 @@ import {
   actProgress,
   actScore,
   answeredEffect,
+  capSplitShare,
   answeredScore,
   sanitizeChoice,
   choiceEffect,
@@ -343,5 +344,31 @@ describe('answered-only helpers (what a player has really chosen)', () => {
     expect(actProgress(shack, 1, [half])).toEqual({ answered: 1, total: 3 });
     expect(actProgress(ROLES.household, 1, [])).toEqual({ answered: 0, total: 1 });
     expect(actProgress(ROLES.panchayat, 1, [])).toEqual({ answered: 0, total: 1 });
+  });
+});
+
+describe('capSplitShare (a budget line while its slider is dragged)', () => {
+  const budget = ROLES.household.decisions[0];
+  if (budget?.widget !== 'split') throw new Error('household.budget should be a split');
+
+  it('lets a line take what it asks for while there is room', () => {
+    expect(capSplitShare(budget, { food: 0, water: 0, transport: 0, cooling: 0 }, 'food', 6)).toBe(
+      6,
+    );
+  });
+
+  it('never lets the total pass the budget', () => {
+    const shares = { food: 4, water: 3, transport: 0, cooling: 0 }; // 7 of 10 spent elsewhere
+    expect(capSplitShare(budget, shares, 'transport', 9)).toBe(3);
+    expect(capSplitShare(budget, shares, 'food', 9)).toBe(7); // moving food: its own 4 is not "others"
+  });
+
+  it('stays at zero or above, and snaps to whole steps', () => {
+    const full = { food: 5, water: 5, transport: 0, cooling: 0 };
+    expect(capSplitShare(budget, full, 'cooling', 4)).toBe(0);
+    expect(capSplitShare(budget, full, 'cooling', -3)).toBe(0);
+    expect(
+      capSplitShare(budget, { food: 0, water: 0, transport: 0, cooling: 0 }, 'water', 2.6),
+    ).toBe(3);
   });
 });

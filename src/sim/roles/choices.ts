@@ -2,7 +2,7 @@
 // the bots (to rank options) and, from M2, simulate(). Every answer is clamped to what the decision
 // allows, which is all the anti-cheat a jam needs (plan 5.1).
 import { NO_EFFECT, addEffects, scaleEffect } from './effects';
-import type { Act, Choice, Decision, Effect, RoleConfig } from './types';
+import type { Act, Choice, Decision, Effect, RoleConfig, SplitDecision } from './types';
 
 /** Snap to the step grid and keep inside [min, max]. Anything that is not a number falls back. */
 function snap(value: unknown, min: number, max: number, step: number, fallback: number): number {
@@ -273,4 +273,23 @@ export function actProgress(
     answered += answeredCount(answer);
   }
   return { answered, total };
+}
+
+/**
+ * How far a split line may be set, given what the other lines already take: the lesser of what was
+ * asked for and what is left of the budget, snapped to the step. Used while a slider is dragged so
+ * the total can never go past the budget.
+ */
+export function capSplitShare(
+  decision: SplitDecision,
+  shares: Readonly<Record<string, number>>,
+  partId: string,
+  requested: number,
+): number {
+  let others = 0;
+  for (const part of decision.parts) {
+    if (part.id !== partId) others += shares[part.id] ?? 0;
+  }
+  const room = Math.max(0, decision.budget - others);
+  return snap(Math.min(requested, room), 0, room, decision.step, 0);
 }

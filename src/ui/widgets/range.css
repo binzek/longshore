@@ -1,0 +1,112 @@
+/* Sliders (a single slider and the household's budget lines). Native range inputs, restyled: a thin
+   line that fills as you go, and a round light thumb. "Not set" (before the first touch) is dimmed
+   with a hollow thumb, so it clearly has no answer yet. */
+.range-group {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.range {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.range__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.range__label {
+  font: italic 400 0.95rem/1.2 var(--font-text);
+  opacity: 0.85;
+}
+
+/* Newsreader digits are all the same width, so the number does not jitter as the thumb moves. */
+.range__value {
+  min-width: 2ch;
+  text-align: right;
+  font: 400 1.15rem/1 var(--font-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.range__savings {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(30 47 54 / 0.12);
+}
+
+.range input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.75rem; /* 44 px tap target; the line itself is thin */
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y; /* horizontal drags belong to the slider, vertical swipes still scroll the panel */
+  --fill: 0%;
+}
+
+.range input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ink) var(--fill), rgb(30 47 54 / 0.22) var(--fill));
+}
+
+.range input[type='range']::-moz-range-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(30 47 54 / 0.22);
+}
+
+.range input[type='range']::-moz-range-progress {
+  height: 2px;
+  background: var(--ink);
+}
+
+.range input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: calc((2px - 1.5rem) / 2); /* centre the thumb on the line */
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: rgb(255 250 240 / 0.95);
+  box-shadow: 0 2px 8px rgb(30 47 54 / 0.18);
+}
+
+.range input[type='range']::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  box-sizing: border-box;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: rgb(255 250 240 / 0.95);
+  box-shadow: 0 2px 8px rgb(30 47 54 / 0.18);
+}
+
+.range input[type='range']:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -4px;
+  border-radius: 0.8rem;
+}
+
+/* Not set yet. */
+.range.is-unset .range__value,
+.range__savings.is-unset .range__value {
+  opacity: 0.45;
+}
+
+.range.is-unset input[type='range']::-webkit-slider-thumb {
+  background: transparent;
+  box-shadow: none;
+  border-color: rgb(30 47 54 / 0.45);
+}
+
+.range.is-unset input[type='range']::-moz-range-thumb {
+  background: transparent;
+  box-shadow: none;
+  border-color: rgb(30 47 54 / 0.45);
+}

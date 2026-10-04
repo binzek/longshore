@@ -119,7 +119,12 @@
           "wasteDrive": "Waste drive",
           "fishingBan": "Fishing ban window",
           "setback": "Setback rule",
-          "relocation": "Relocation scheme"
+          "relocation": "Relocation scheme",
+          "seawall.hint": "Protects the shore in front of it, and pushes erosion onto the stretch beside it.",
+          "wasteDrive.hint": "Cleans up the beach and the drains. It costs the village money.",
+          "fishingBan.hint": "Leaves the fish alone for a season. Fishers earn less now.",
+          "setback.hint": "Keeps new building back from the shore. Shack owners lose space.",
+          "relocation.hint": "Helps families move away from the water. Slow, costly, and not everyone agrees."
         }
       }
     }

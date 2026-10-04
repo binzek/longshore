@@ -7,7 +7,7 @@ import type { Decision } from './types';
  * - toggleSet: each toggle id, and "<toggle>.<option>" for each option
  * - slider: "value"
  * - split: each part id, and "unspent"
- * - cardDraft: each card id
+ * - cardDraft: each card id, and "<card>.hint" for the one-line explanation under it
  */
 export function labelKeys(decision: Decision): string[] {
   switch (decision.widget) {
@@ -18,6 +18,6 @@ export function labelKeys(decision: Decision): string[] {
     case 'split':
       return [...decision.parts.map((p) => p.id), 'unspent'];
     case 'cardDraft':
-      return decision.cards.map((c) => c.id);
+      return decision.cards.flatMap((c) => [c.id, `${c.id}.hint`]);
   }
 }
