@@ -3,7 +3,7 @@
 import { Fog, PerspectiveCamera, Scene, Timer, Vector3, WebGLRenderer } from 'three';
 import type { RoleId } from '../sim/roles/types';
 import { createCameraRig } from './cameraRig';
-import { CAMERA, FOG, MARKERS } from './config';
+import { CAMERA, FOG, MARKERS, SEA } from './config';
 import { debugAnchorMarkers, debugExpose, debugStartX } from './debug';
 import { ROLE_ANCHORS, anchorPosition } from './layout';
 import { createLights } from './lights';
@@ -21,6 +21,8 @@ export interface World {
   projectRole(id: RoleId): ScreenPoint;
   /** Run `listener` after every frame is drawn, so the HTML on top can follow the camera. */
   onFrame(listener: () => void): void;
+  /** How high the sea sits against the beach, 0 (as in 2026) to 1 (as high as it goes). Eases there. */
+  setSeaRise(share: number): void;
   dispose(): void;
 }
 
@@ -88,9 +90,16 @@ export function createWorld(container: HTMLElement): World {
 
   const frameListeners: (() => void)[] = [];
 
+  // The 2050 jump raises the sea (the one place the simulation reaches into the scene).
+  let seaTarget = 0;
+  let seaNow = 0;
+
   renderer.setAnimationLoop((time) => {
     timer.update(time);
-    rig.update(timer.getDelta());
+    const delta = timer.getDelta();
+    rig.update(delta);
+    seaNow += (seaTarget - seaNow) * Math.min(1, delta * 1.2); // ease towards the target
+    sea.mesh.position.y = seaNow * SEA.riseMax;
     sea.update(timer.getElapsed());
     props.update(timer.getElapsed());
     sky.position.copy(camera.position); // the dome travels with the camera: no visible edge
@@ -104,6 +113,9 @@ export function createWorld(container: HTMLElement): World {
     projectRole,
     onFrame(listener) {
       frameListeners.push(listener);
+    },
+    setSeaRise(share) {
+      seaTarget = Math.min(1, Math.max(0, share));
     },
     dispose() {
       renderer.setAnimationLoop(null);

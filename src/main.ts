@@ -13,6 +13,7 @@ import { PAN } from './scene/config';
 import { debugExpose } from './scene/debug';
 import { ROLE_ANCHORS } from './scene/layout';
 import { createWorld } from './scene/world';
+import { createEnding } from './ui/ending';
 import { createIntro } from './ui/intro';
 import { createRoleMarkers } from './ui/markers';
 import { createRolePanel } from './ui/rolePanel';
@@ -103,10 +104,21 @@ requestAnimationFrame(() =>
       });
       world.onFrame(() => markers.update(world.projectRole));
 
-      // After Begin the intro lines play over the coast; the markers appear when it ends or is skipped.
+      // The game-y end: Jump to 2050 runs the simulation (roles the player left alone become bots),
+      // raises the sea behind a haze veil and shows what the coast and each role ended up with.
+      const ending = createEnding({
+        store,
+        sfx,
+        onStart: panel.close,
+        onSeaRise: world.setSeaRise,
+      });
+
+      // After Begin the intro lines play over the coast; the markers and the Jump button appear
+      // when it ends or is skipped.
       const intro = createIntro(narration.intro, uiText.intro.skip);
       title.onBegin(intro.start);
       intro.onDone(markers.show);
+      intro.onDone(ending.showButton);
 
       finishStep();
       world.firstFrame.then(finishStep);

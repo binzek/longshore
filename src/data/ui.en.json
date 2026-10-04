@@ -4,5 +4,40 @@
   },
   "intro": {
     "skip": "Skip"
+  },
+  "finish": {
+    "button": "Jump to 2050",
+    "hint": "Roles you leave alone are played by bots"
+  },
+  "jump": {
+    "caption": "The years pass."
+  },
+  "ending": {
+    "title": "2050",
+    "sticker": "Simulation",
+    "note": "A simplified simulation. Every number here is a placeholder, not a measurement.",
+    "stormTitle": "The storm",
+    "storm": {
+      "light": "The surge came, and the shore held.",
+      "medium": "The surge came. The shore held in places and gave way in others.",
+      "heavy": "The surge came straight through."
+    },
+    "metersTitle": "The shared coast",
+    "meters": {
+      "shoreBuffer": "Shore buffer",
+      "fishStock": "Fish stock",
+      "cleanCoast": "Clean coast",
+      "coolness": "Cool shade"
+    },
+    "scoresTitle": "What each of you kept",
+    "you": "You",
+    "bot": "Bot",
+    "verdict": {
+      "thriving": "The coast you shared is still alive. It cost each of you something, and it was worth it.",
+      "holding": "The coast is holding, only just. The next years will ask more of it.",
+      "fraying": "The coast is fraying. Each of you did what seemed sensible, and together it was not enough.",
+      "broken": "The coast has lost most of what it gave you. Nobody chose this, and everybody helped."
+    },
+    "again": "Play again"
   }
 }
