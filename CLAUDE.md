@@ -70,4 +70,6 @@ Deliberately not set up yet:
 
 Technical baseline done (2026-10-04): project scaffolded, deps installed, CI written, placeholder page that only proves Three.js and WebGL load. Folders from plan section 11 exist as empty placeholders. The only real code is the seeded RNG in `src/sim/rng.ts` plus its test.
 
-Not yet done: GitHub remote, Vercel project and the longshore.binzek.com domain (need Wajid's accounts, see the go-live checklist). Next step is M0 (scaffold + backdrop), when Wajid says to start.
+Live (2026-10-04): the baseline is deployed at https://longshore.binzek.com from `github.com/binzek/longshore` (remote `origin` uses SSH). Checked on a 390x844 phone viewport: page renders, shows "three r186 · WebGL 2 ok", no console messages. The first GitHub Actions run (format, typecheck, tests, build on Linux) passed.
+
+Next step is M0 (first impression: scaffold + backdrop), started by Wajid in a separate chat. Do M0 on a branch; the Vercel preview URL for it is the playthrough check before promoting to `main`.
