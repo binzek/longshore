@@ -19,6 +19,13 @@ export const PAN = {
   focusDistance: 26, // metres ahead of the camera whose ground should track the finger 1:1
   keySpeed: 25, // metres per second while an arrow key is held
   wheelPush: 0.2, // metres/second of extra speed per wheel pixel
+  tapSlopPx: 8, // a press that moves less than this (screen pixels) is a tap, not a drag
+} as const;
+
+// The glass markers that float over each role's spot (see src/ui/markers.ts).
+export const MARKERS = {
+  lift: 4.5, // metres above the anchor, so the marker hovers over the spot, not on it
+  edgeMargin: 40, // px past the screen edge before a marker counts as off screen and hides
 } as const;
 
 export const FOG = {

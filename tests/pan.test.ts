@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_SPEED, dragBy, limitSpeed, nudge, rubberBand, stepFree } from '../src/scene/pan';
+import {
+  MAX_SPEED,
+  dragBy,
+  limitSpeed,
+  movedPastSlop,
+  nudge,
+  rubberBand,
+  stepFree,
+} from '../src/scene/pan';
 import type { PanBounds, PanState } from '../src/scene/pan';
 
 const bounds: PanBounds = { min: -100, max: 100 };
@@ -87,5 +95,15 @@ describe('speed limits', () => {
     const state: PanState = { pos: 0, vel: 0 };
     nudge(state, 1000);
     expect(state.vel).toBe(MAX_SPEED);
+  });
+});
+
+describe('movedPastSlop', () => {
+  it('treats a little finger wobble as a tap and a real move as a drag', () => {
+    expect(movedPastSlop(0, 0, 8)).toBe(false);
+    expect(movedPastSlop(3, -4, 8)).toBe(false); // 5 px away
+    expect(movedPastSlop(8, 0, 8)).toBe(false); // exactly the slop is still a tap
+    expect(movedPastSlop(6, 6, 8)).toBe(true); // about 8.5 px diagonally
+    expect(movedPastSlop(-20, 0, 8)).toBe(true);
   });
 });

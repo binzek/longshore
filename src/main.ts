@@ -4,8 +4,11 @@ import './style.css';
 import { createAmbience } from './audio/ambience';
 import { loadSoundOn, saveSoundOn } from './audio/preference';
 import { applyPaletteToCss } from './scene/palette';
+import { PAN } from './scene/config';
 import { debugExpose } from './scene/debug';
+import { ROLE_ANCHORS } from './scene/layout';
 import { createWorld } from './scene/world';
+import { createRoleMarkers } from './ui/markers';
 import { createSoundToggle } from './ui/soundToggle';
 import { initTitleScreen } from './ui/titleScreen';
 
@@ -58,6 +61,18 @@ requestAnimationFrame(() =>
   requestAnimationFrame(() => {
     try {
       const world = createWorld(app);
+
+      // Glass markers over each role's spot. They follow the camera, and appear after Begin.
+      const markers = createRoleMarkers({
+        container: app,
+        order: ROLE_ANCHORS.map((anchor) => anchor.id),
+        tapSlopPx: PAN.tapSlopPx,
+        // Step 3 opens the role's panel here. For now a tap just highlights that marker.
+        onSelect: (id) => markers.select(id),
+      });
+      world.onFrame(() => markers.update(world.projectRole));
+      title.onBegin(markers.show);
+
       finishStep();
       world.firstFrame.then(finishStep);
     } catch (error) {

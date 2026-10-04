@@ -34,6 +34,14 @@ export function dragBy(state: PanState, delta: number, { min, max }: PanBounds):
   state.pos = Math.min(Math.max(state.pos + delta, min - MAX_OVERDRAG), max + MAX_OVERDRAG);
 }
 
+/**
+ * True once a press has moved far enough (screen pixels) to count as a drag, not a tap. Fingers
+ * wobble a few pixels even when they mean to tap, so a tap on a marker must survive a little jitter.
+ */
+export function movedPastSlop(dx: number, dy: number, slop: number): boolean {
+  return Math.hypot(dx, dy) > slop;
+}
+
 /** Add a push (mouse wheel). The glide takes it from there. */
 export function nudge(state: PanState, impulse: number): void {
   state.vel = limitSpeed(state.vel + impulse);

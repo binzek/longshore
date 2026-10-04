@@ -5,7 +5,15 @@ import { MathUtils, type PerspectiveCamera } from 'three';
 import { placeCamera } from './camera';
 import { CAMERA, PAN } from './config';
 import { PAN_RANGE } from './layout';
-import { dragBy, limitSpeed, nudge, rubberBand, stepFree, type PanState } from './pan';
+import {
+  dragBy,
+  limitSpeed,
+  movedPastSlop,
+  nudge,
+  rubberBand,
+  stepFree,
+  type PanState,
+} from './pan';
 
 export interface CameraRig {
   /** Call every frame with the seconds since the last frame. */
@@ -15,6 +23,10 @@ export interface CameraRig {
   dispose(): void;
 }
 
+/**
+ * `surface` is the element that receives the drags. Pass the whole scene container (not just the
+ * canvas) so a press that starts on a glass marker still pans the coast.
+ */
 export function createCameraRig(
   camera: PerspectiveCamera,
   surface: HTMLElement,
@@ -27,6 +39,9 @@ export function createCameraRig(
   let activePointer = -1;
   let lastClientX = 0;
   let lastTime = 0;
+  let downX = 0;
+  let downY = 0;
+  let pastSlop = false; // false while the press could still turn out to be a tap
   let metresPerPixel = 0.1;
   const keysDown = new Set<string>();
 
@@ -45,17 +60,25 @@ export function createCameraRig(
     activePointer = event.pointerId;
     lastClientX = event.clientX;
     lastTime = event.timeStamp;
+    downX = event.clientX;
+    downY = event.clientY;
+    pastSlop = false;
     state.vel = 0;
     metresPerPixel = dragScale();
-    try {
-      surface.setPointerCapture(event.pointerId); // keep getting moves if the finger leaves the canvas
-    } catch {
-      // Not fatal: some synthetic or already-ended pointers cannot be captured.
-    }
+    // The pointer is NOT captured yet. Capturing swallows the click a marker is waiting for, so we
+    // only capture once the press has clearly become a drag (see onPointerMove).
   };
 
   const onPointerMove = (event: PointerEvent) => {
     if (!dragging || event.pointerId !== activePointer) return;
+    if (!pastSlop && movedPastSlop(event.clientX - downX, event.clientY - downY, PAN.tapSlopPx)) {
+      pastSlop = true;
+      try {
+        surface.setPointerCapture(event.pointerId); // keep getting moves if the finger leaves the screen
+      } catch {
+        // Not fatal: some synthetic or already-ended pointers cannot be captured.
+      }
+    }
     // Dragging the scene to the left reveals more coast to the right (+x), so the sign is flipped.
     const delta = -(event.clientX - lastClientX) * metresPerPixel;
     const seconds = Math.max((event.timeStamp - lastTime) / 1000, 0.001);
@@ -68,8 +91,9 @@ export function createCameraRig(
   const onPointerEnd = (event: PointerEvent) => {
     if (!dragging || event.pointerId !== activePointer) return;
     dragging = false;
-    // Held still before lifting? Then no glide. Otherwise glide at the smoothed speed.
-    state.vel = event.timeStamp - lastTime > 80 ? 0 : limitSpeed(state.vel);
+    // A tap never glides. Held still before lifting? Then no glide either. Otherwise glide on at
+    // the smoothed speed.
+    state.vel = !pastSlop || event.timeStamp - lastTime > 80 ? 0 : limitSpeed(state.vel);
   };
 
   const onWheel = (event: WheelEvent) => {
@@ -83,10 +107,12 @@ export function createCameraRig(
     keysDown.delete(event.key);
   };
 
+  // A drag starts on the scene but is followed on `window`, so its moves and its end are never
+  // missed, even if the pointer slides over the sound button or out of the browser window.
   surface.addEventListener('pointerdown', onPointerDown);
-  surface.addEventListener('pointermove', onPointerMove);
-  surface.addEventListener('pointerup', onPointerEnd);
-  surface.addEventListener('pointercancel', onPointerEnd);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerEnd);
+  window.addEventListener('pointercancel', onPointerEnd);
   surface.addEventListener('wheel', onWheel, { passive: true });
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
@@ -118,9 +144,9 @@ export function createCameraRig(
     },
     dispose() {
       surface.removeEventListener('pointerdown', onPointerDown);
-      surface.removeEventListener('pointermove', onPointerMove);
-      surface.removeEventListener('pointerup', onPointerEnd);
-      surface.removeEventListener('pointercancel', onPointerEnd);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerEnd);
+      window.removeEventListener('pointercancel', onPointerEnd);
       surface.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
