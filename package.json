@@ -1,0 +1,35 @@
+{
+  "name": "longshore",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A short multiplayer low-poly climate game on the Kozhikode / Malabar coast.",
+  "scripts": {
+    "dev": "vite",
+    "dev:host": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "preview:host": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "howler": "^2.2.4",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.13",
+    "@types/three": "^0.186.0",
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}
