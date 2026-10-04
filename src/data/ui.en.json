@@ -1,0 +1,8 @@
+{
+  "panel": {
+    "progress": "{answered} of {total} chosen"
+  },
+  "intro": {
+    "skip": "Skip"
+  }
+}

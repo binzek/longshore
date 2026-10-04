@@ -2,7 +2,8 @@
 // decisions for the act, each drawn by a reusable widget, with the role's private score at the
 // bottom. It lives on <body>, outside #app, so dragging inside it never pans the coast.
 import type { ChoiceStore } from '../game/choiceStore';
-import { ROLES, actScore, decisionsForAct } from '../sim/roles';
+import uiText from '../data/ui.en.json';
+import { ROLES, decisionsForAct } from '../sim/roles';
 import type { Decision, RoleId } from '../sim/roles';
 import './rolePanel.css';
 import { ROLE_TEXT } from './roleText';
@@ -36,7 +37,10 @@ const SKELETON = `
   </header>
   <div class="panel__body"></div>
   <footer class="panel__foot">
-    <span class="panel__score-name"></span>
+    <div class="panel__who-score">
+      <span class="panel__score-name"></span>
+      <span class="panel__progress"></span>
+    </div>
     <output class="panel__score"></output>
   </footer>`;
 
@@ -65,13 +69,18 @@ export function createRolePanel(options: {
   const body = find('.panel__body');
   const scoreName = find('.panel__score-name');
   const score = find('.panel__score');
+  const progress = find('.panel__progress');
 
   let current: RoleId | null = null;
 
-  function updateScore(): void {
+  // The score and "2 of 3 chosen" both come from what has actually been answered so far.
+  function updateFooter(): void {
     if (!current) return;
-    const value = actScore(ROLES[current], ACT, store.forAct(current, ACT));
-    score.textContent = String(Math.round(value));
+    score.textContent = String(Math.round(store.score(current, ACT)));
+    const { answered, total } = store.progress(current, ACT);
+    progress.textContent = uiText.panel.progress
+      .replace('{answered}', String(answered))
+      .replace('{total}', String(total));
   }
 
   function renderDecision(id: RoleId, decision: Decision): HTMLElement {
@@ -89,16 +98,14 @@ export function createRolePanel(options: {
 
     let widget: HTMLElement | null = null;
     if (decision.widget === 'toggleSet') {
-      const choice = store.get(id, decision);
-      if (choice.widget === 'toggleSet') {
-        widget = createToggleSet({
-          idPrefix: `${id}-${decision.id}`,
-          decision,
-          labels: text?.labels ?? {},
-          choice,
-          onChange: (answer) => store.set(id, decision, answer),
-        });
-      }
+      const answered = store.get(id, decision);
+      widget = createToggleSet({
+        idPrefix: `${id}-${decision.id}`,
+        decision,
+        labels: text?.labels ?? {},
+        choice: answered?.widget === 'toggleSet' ? answered : undefined,
+        onChange: (answer) => store.set(id, decision, answer),
+      });
     }
     if (!widget) {
       widget = document.createElement('p');
@@ -118,7 +125,7 @@ export function createRolePanel(options: {
     // Replace everything: another role's widgets must not linger (or share radio group names).
     body.replaceChildren(...decisionsForAct(ROLES[id], ACT).map((d) => renderDecision(id, d)));
     body.scrollTop = 0;
-    updateScore();
+    updateFooter();
   }
 
   const close = () => {
@@ -134,7 +141,7 @@ export function createRolePanel(options: {
     if (event.key === 'Escape') close();
   });
   store.subscribe((role) => {
-    if (role === current) updateScore();
+    if (role === current) updateFooter();
   });
 
   return {

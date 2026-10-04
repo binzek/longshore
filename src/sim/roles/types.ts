@@ -38,7 +38,7 @@ export interface ToggleOption {
 /** One either/or (or pick-one-of-three) switch inside a toggleSet. */
 export interface Toggle {
   id: string;
-  /** What is picked if the player never touches it (and what locks in if the timer runs out). */
+  /** Not shown to players, who start with nothing picked. Used where a complete answer is needed anyway (bots, simulate(), tests). */
   default: string;
   options: ToggleOption[];
 }

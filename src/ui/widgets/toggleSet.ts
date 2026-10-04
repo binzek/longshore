@@ -11,11 +11,12 @@ export function createToggleSet(options: {
   idPrefix: string;
   decision: ToggleSetDecision;
   labels: Record<string, string>;
-  choice: ToggleSetChoice;
+  /** What the player has answered so far, if anything. Nothing is pre-selected. */
+  choice: ToggleSetChoice | undefined;
   onChange(choice: Choice): void;
 }): HTMLElement {
   const { decision, labels } = options;
-  const picks = { ...options.choice.picks };
+  const picks: Record<string, string> = { ...options.choice?.picks };
   const root = document.createElement('div');
   root.className = 'toggle-set';
 

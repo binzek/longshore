@@ -6,7 +6,11 @@ import {
   ROLES,
   ROLE_IDS,
   actEffect,
+  actProgress,
   actScore,
+  answeredEffect,
+  answeredScore,
+  sanitizeChoice,
   choiceEffect,
   clampChoice,
   decisionsForAct,
@@ -260,7 +264,7 @@ describe('choiceEffect and actEffect', () => {
     expect(choiceEffect(budget, nothingSpent)).toEqual(budget.unspent);
   });
 
-  it('treats a missing answer as the default, so a timeout locks in something sensible', () => {
+  it('fills a missing answer with the default so the sim always gets a complete answer', () => {
     for (const id of ROLE_IDS) {
       const role = ROLES[id];
       const defaults = role.decisions.map(defaultChoice);
@@ -304,5 +308,40 @@ describe('actScore', () => {
     });
     expect(actScore(role(98, 5), 1, [])).toBe(100);
     expect(actScore(role(2, -6), 1, [])).toBe(0);
+  });
+});
+
+describe('answered-only helpers (what a player has really chosen)', () => {
+  const shack = ROLES.shack;
+  const menu = shack.decisions[0];
+  if (!menu) throw new Error('shack has no decisions');
+
+  it('sanitizeChoice keeps valid parts, adds no defaults, and returns undefined when empty', () => {
+    const half: Choice = { decisionId: 'menu', widget: 'toggleSet', picks: { fish: 'local' } };
+    expect(sanitizeChoice(menu, half)).toEqual(half);
+    const bad: Choice = { decisionId: 'menu', widget: 'toggleSet', picks: { fish: 'gold' } };
+    expect(sanitizeChoice(menu, bad)).toBeUndefined();
+    expect(sanitizeChoice(menu, undefined)).toBeUndefined();
+  });
+
+  it('answeredEffect counts only the picked toggles; the full effect fills the rest', () => {
+    const half: Choice = { decisionId: 'menu', widget: 'toggleSet', picks: { cooling: 'ac' } };
+    expect(answeredEffect(menu, half)).toEqual({ privateGain: 5, stewardship: { coolness: -0.5 } });
+    expect(answeredEffect(menu, undefined)).toEqual({ privateGain: 0, stewardship: {} });
+    expect(choiceEffect(menu, half).privateGain).toBe(5 + 2 + 2); // defaults fill plates and fish
+  });
+
+  it('answeredScore starts at the base score and grows only with answers', () => {
+    expect(answeredScore(shack, 1, [])).toBe(40);
+    const half: Choice = { decisionId: 'menu', widget: 'toggleSet', picks: { cooling: 'ac' } };
+    expect(answeredScore(shack, 1, [half])).toBe(45);
+  });
+
+  it('actProgress counts toggles for a toggle set and decisions for the rest', () => {
+    expect(actProgress(shack, 1, [])).toEqual({ answered: 0, total: 3 });
+    const half: Choice = { decisionId: 'menu', widget: 'toggleSet', picks: { plates: 'steel' } };
+    expect(actProgress(shack, 1, [half])).toEqual({ answered: 1, total: 3 });
+    expect(actProgress(ROLES.household, 1, [])).toEqual({ answered: 0, total: 1 });
+    expect(actProgress(ROLES.panchayat, 1, [])).toEqual({ answered: 0, total: 1 });
   });
 });

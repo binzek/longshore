@@ -144,8 +144,18 @@
   border-top: 1px solid rgb(30 47 54 / 0.12);
 }
 
+.panel__who-score {
+  display: grid;
+  gap: 0.15rem;
+}
+
 .panel__score-name {
   font: italic 400 1rem/1.2 var(--font-text);
+}
+
+.panel__progress {
+  font: italic 400 0.875rem/1.2 var(--font-text);
+  opacity: 0.65;
 }
 
 /* Newsreader digits are all the same width, so the number does not jitter when it changes. */

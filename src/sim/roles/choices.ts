@@ -11,7 +11,7 @@ function snap(value: unknown, min: number, max: number, step: number, fallback: 
   return Math.min(max, Math.max(min, snapped));
 }
 
-/** What is chosen if the player never touches the panel. */
+/** A complete answer built from the defaults, for the bots, simulate() and tests. Players themselves start with nothing chosen. */
 export function defaultChoice(decision: Decision): Choice {
   const decisionId = decision.id;
   switch (decision.widget) {
@@ -125,8 +125,9 @@ export function choiceEffect(decision: Decision, choice: Choice | undefined): Ef
 }
 
 /**
- * The total effect of everything a role chose in one act. A decision with no answer counts as its
- * default, so the timer running out locks in something sensible.
+ * The total effect of everything a role chose in one act, for the sim and the bots. A decision with
+ * no answer counts as its default so the result is always complete; players themselves start with
+ * nothing chosen (see the answered* helpers below).
  */
 export function actEffect(role: RoleConfig, act: Act, choices: readonly Choice[]): Effect {
   let total = NO_EFFECT;
@@ -146,4 +147,126 @@ export function actEffect(role: RoleConfig, act: Act, choices: readonly Choice[]
 export function actScore(role: RoleConfig, act: Act, choices: readonly Choice[]): number {
   const gain = actEffect(role, act, choices).privateGain;
   return Math.min(100, Math.max(0, role.privateScoreStart + gain));
+}
+
+// ---- What the player has actually answered ----
+// Players start with nothing chosen (no default is shown), so the panel works with half-finished
+// answers. These helpers never fill a gap with a default: a toggle nobody touched simply has no
+// entry. (The fill-with-default functions above stay for the bots and simulate(), which need a
+// complete answer.)
+
+/** The pieces of a decision a player answers one at a time: each toggle, or the whole widget. */
+export function answerParts(decision: Decision): string[] {
+  switch (decision.widget) {
+    case 'toggleSet':
+      return decision.toggles.map((t) => t.id);
+    case 'slider':
+      return ['value'];
+    case 'split':
+      return ['shares'];
+    case 'cardDraft':
+      return ['card'];
+  }
+}
+
+/**
+ * Keeps what is valid in a (possibly half-finished) answer and drops the rest, without adding
+ * defaults. Returns undefined if nothing valid is left.
+ */
+export function sanitizeChoice(decision: Decision, choice: Choice | undefined): Choice | undefined {
+  if (!choice || choice.decisionId !== decision.id || choice.widget !== decision.widget) {
+    return undefined;
+  }
+  switch (decision.widget) {
+    case 'toggleSet': {
+      if (choice.widget !== 'toggleSet') return undefined;
+      const picks: Record<string, string> = {};
+      for (const toggle of decision.toggles) {
+        const picked = choice.picks[toggle.id];
+        if (picked !== undefined && toggle.options.some((o) => o.id === picked)) {
+          picks[toggle.id] = picked;
+        }
+      }
+      return Object.keys(picks).length > 0
+        ? { decisionId: decision.id, widget: 'toggleSet', picks }
+        : undefined;
+    }
+    case 'slider': {
+      if (choice.widget !== 'slider' || !Number.isFinite(choice.value)) return undefined;
+      const value = snap(choice.value, decision.min, decision.max, decision.step, decision.min);
+      return { decisionId: decision.id, widget: 'slider', value };
+    }
+    case 'split': {
+      if (choice.widget !== 'split') return undefined;
+      const shares: Record<string, number> = {};
+      let remaining = decision.budget;
+      for (const part of decision.parts) {
+        const share = Math.min(
+          snap(choice.shares[part.id], 0, remaining, decision.step, 0),
+          remaining,
+        );
+        shares[part.id] = share;
+        remaining -= share;
+      }
+      return { decisionId: decision.id, widget: 'split', shares };
+    }
+    case 'cardDraft': {
+      if (choice.widget !== 'cardDraft') return undefined;
+      return decision.cards.some((c) => c.id === choice.card)
+        ? { decisionId: decision.id, widget: 'cardDraft', card: choice.card }
+        : undefined;
+    }
+  }
+}
+
+/** How many of a decision's parts the (sanitised) answer covers. */
+function answeredCount(choice: Choice | undefined): number {
+  if (!choice) return 0;
+  return choice.widget === 'toggleSet' ? Object.keys(choice.picks).length : 1;
+}
+
+/** The effect of only what has been answered; anything not yet chosen adds nothing. */
+export function answeredEffect(decision: Decision, choice: Choice | undefined): Effect {
+  const clean = sanitizeChoice(decision, choice);
+  if (!clean) return NO_EFFECT;
+  if (decision.widget !== 'toggleSet' || clean.widget !== 'toggleSet') {
+    return choiceEffect(decision, clean); // already complete and valid
+  }
+  let total = NO_EFFECT;
+  for (const toggle of decision.toggles) {
+    const option = toggle.options.find((o) => o.id === clean.picks[toggle.id]);
+    if (option) total = addEffects(total, option.effect);
+  }
+  return total;
+}
+
+/** The role's private score from what has been answered so far, kept between 0 and 100. */
+export function answeredScore(role: RoleConfig, act: Act, choices: readonly Choice[]): number {
+  let gain = 0;
+  for (const decision of role.decisions) {
+    if (decision.act !== act) continue;
+    const answer = choices.find((c) => c.decisionId === decision.id);
+    gain += answeredEffect(decision, answer).privateGain;
+  }
+  return Math.min(100, Math.max(0, role.privateScoreStart + gain));
+}
+
+/** How many of the act's parts are answered, out of how many there are ("2 of 3 chosen"). */
+export function actProgress(
+  role: RoleConfig,
+  act: Act,
+  choices: readonly Choice[],
+): { answered: number; total: number } {
+  let answered = 0;
+  let total = 0;
+  for (const decision of role.decisions) {
+    if (decision.act !== act) continue;
+    total += answerParts(decision).length;
+    const answer = sanitizeChoice(
+      decision,
+      choices.find((c) => c.decisionId === decision.id),
+    );
+    answered += answeredCount(answer);
+  }
+  return { answered, total };
 }

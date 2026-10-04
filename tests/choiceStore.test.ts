@@ -1,74 +1,84 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createChoiceStore } from '../src/game/choiceStore';
-import { ROLES, actScore, defaultChoice, type Choice, type Decision } from '../src/sim/roles';
+import { ROLES, type Choice, type Decision } from '../src/sim/roles';
 
-const menu = (): Decision => {
+const shackMenu = (): Decision => {
   const d = ROLES.shack.decisions[0];
   if (!d) throw new Error('shack has no decisions');
   return d;
 };
 
-describe('createChoiceStore', () => {
-  it('gives the default until something is chosen', () => {
+const plates = (option: string): Choice => ({
+  decisionId: 'menu',
+  widget: 'toggleSet',
+  picks: { plates: option },
+});
+
+describe('createChoiceStore: players start with nothing chosen', () => {
+  it('has no answers, a base score and 0 of 3 chosen for a fresh role', () => {
     const store = createChoiceStore();
-    expect(store.get('shack', menu())).toEqual(defaultChoice(menu()));
+    expect(store.get('shack', shackMenu())).toBeUndefined();
+    expect(store.forAct('shack', 1)).toEqual([]);
+    expect(store.score('shack', 1)).toBe(40); // the shack's starting score, nothing added
+    expect(store.progress('shack', 1)).toEqual({ answered: 0, total: 3 });
+    expect(store.isComplete('shack', 1)).toBe(false);
   });
 
-  it('remembers a choice, per role', () => {
+  it('counts only the toggles actually picked, and only their effects', () => {
     const store = createChoiceStore();
-    const greedy: Choice = {
+    store.set('shack', shackMenu(), plates('single')); // single-use plates: +5 profit
+    expect(store.progress('shack', 1)).toEqual({ answered: 1, total: 3 });
+    expect(store.score('shack', 1)).toBe(45);
+    expect(store.get('shack', shackMenu())).toEqual(plates('single')); // no defaults added
+  });
+
+  it('is complete, and scores in full, once every toggle is picked', () => {
+    const store = createChoiceStore();
+    store.set('shack', shackMenu(), {
       decisionId: 'menu',
       widget: 'toggleSet',
       picks: { plates: 'single', fish: 'trucked', cooling: 'ac' },
-    };
-    store.set('shack', menu(), greedy);
-    expect(store.get('shack', menu())).toEqual(greedy);
-    const fisherHaul = ROLES.fisher.decisions[0];
-    if (!fisherHaul) throw new Error('fisher has no decisions');
-    expect(store.get('fisher', fisherHaul)).toEqual(defaultChoice(fisherHaul)); // untouched
+    });
+    expect(store.isComplete('shack', 1)).toBe(true);
+    expect(store.score('shack', 1)).toBe(54); // 40 + 5 + 4 + 5
   });
 
-  it('clamps nonsense on the way in, so the store only holds valid choices', () => {
+  it('counts each of the fisher\u2019s three decisions as one part', () => {
     const store = createChoiceStore();
-    const junk: Choice = {
+    const [haul, ban] = ROLES.fisher.decisions;
+    if (!haul || !ban) throw new Error('fisher should have decisions');
+    expect(store.progress('fisher', 1)).toEqual({ answered: 0, total: 3 });
+    store.set('fisher', ban, { decisionId: 'ban', widget: 'toggleSet', picks: { window: 'skip' } });
+    expect(store.progress('fisher', 1)).toEqual({ answered: 1, total: 3 });
+    expect(store.score('fisher', 1)).toBe(46); // 40 + 6 for skipping the ban
+    expect(store.forAct('fisher', 1).map((a) => a.decisionId)).toEqual(['ban']);
+  });
+
+  it('drops invalid picks instead of storing them or filling defaults', () => {
+    const store = createChoiceStore();
+    store.set('shack', shackMenu(), {
       decisionId: 'menu',
       widget: 'toggleSet',
-      picks: { plates: 'gold', fish: 'trucked' },
-    };
-    store.set('shack', menu(), junk);
-    expect(store.get('shack', menu())).toEqual({
+      picks: { plates: 'gold', fish: 'trucked', napkins: 'paper' },
+    });
+    expect(store.get('shack', shackMenu())).toEqual({
       decisionId: 'menu',
       widget: 'toggleSet',
-      picks: { plates: 'steel', fish: 'trucked', cooling: 'fans' }, // bad and missing -> defaults
+      picks: { fish: 'trucked' }, // bad option and unknown toggle gone, nothing invented
     });
+    store.set('shack', shackMenu(), plates('gold')); // nothing valid left: clears the answer
+    expect(store.get('shack', shackMenu())).toBeUndefined();
   });
 
-  it('lists one answer per decision for an act, in order, mixing chosen and default', () => {
-    const store = createChoiceStore();
-    const fisher = ROLES.fisher;
-    const [haul, ban, gear] = fisher.decisions;
-    if (!haul || !ban || !gear) throw new Error('fisher should have three decisions');
-    store.set('fisher', ban, {
-      decisionId: 'ban',
-      widget: 'toggleSet',
-      picks: { window: 'skip' },
-    });
-    const answers = store.forAct('fisher', 1);
-    expect(answers.map((a) => a.decisionId)).toEqual(['haul', 'ban', 'gear']);
-    expect(answers[0]).toEqual(defaultChoice(haul));
-    expect(answers[1]).toMatchObject({ picks: { window: 'skip' } });
-    // The score the panel shows: start 40 + medium mesh 5 + skip the ban 6 + hand line 2.
-    expect(actScore(fisher, 1, answers)).toBe(53);
-  });
-
-  it('tells subscribers which role changed, until they unsubscribe', () => {
+  it('keeps roles apart and tells subscribers which role changed, until they unsubscribe', () => {
     const store = createChoiceStore();
     const listener = vi.fn();
     const unsubscribe = store.subscribe(listener);
-    store.set('shack', menu(), defaultChoice(menu()));
+    store.set('shack', shackMenu(), plates('steel'));
     expect(listener).toHaveBeenCalledWith('shack');
+    expect(store.progress('fisher', 1).answered).toBe(0);
     unsubscribe();
-    store.set('shack', menu(), defaultChoice(menu()));
+    store.set('shack', shackMenu(), plates('single'));
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
