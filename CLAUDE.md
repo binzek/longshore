@@ -43,14 +43,18 @@ Windows pitfall: if a shell's working directory is spelled with a lowercase driv
 - No hosting config file is needed: Vercel auto-detects Vite (build `npm run build`, output `dist`). Node is pinned to `24.x` in `package.json` (same as CI).
 - Production URL: **https://longshore.binzek.com**. DNS lives on Cloudflare: a `CNAME` named `longshore` pointing at the project-specific target Vercel shows under Settings > Domains, with the Cloudflare proxy **off** ("DNS only", grey cloud) so Vercel can issue and renew the TLS certificate.
 
-## Tooling for Claude (set up 2026-10-04)
+## Tooling for Claude (project-scoped, set up 2026-10-04)
 
-MCP servers (user scope, so they are not in the repo; new ones only appear after a session restart):
+Everything here lives in this repo, nothing in the global Windows config, so a fresh clone gets the same setup.
+
+MCP servers, defined in [.mcp.json](.mcp.json) (plain `npx`, which works on Windows, macOS and Linux):
 
 - `chrome-devtools`: drives a real Chrome so Claude can load the page, read the console and network, take screenshots, emulate a phone and record performance traces. Started with `--isolated` (throwaway profile), `--no-usage-statistics` and `--no-performance-crux` (nothing sent to Google). Do not browse untrusted sites with it.
 - `context7`: current library docs. Use it for Three.js r186, Vite 8, Vitest 5 and TypeScript 7, which are newer than Claude's training data.
 
-Skills (global, in `~/.claude/skills`): `threejs-fundamentals`, `threejs-geometry`, `threejs-materials`, `threejs-lighting`, `threejs-animation`, `threejs-interaction`, `frontend-design`, `web-design-guidelines`.
+Claude Code asks for approval the first time it sees a project MCP server (a safety gate, keep it). On Wajid's machine they are pre-approved in `.claude/settings.local.json`, which is gitignored. New servers only appear after a session restart.
+
+Skills, in `.claude/skills/` and pinned by [skills-lock.json](skills-lock.json): `threejs-fundamentals`, `threejs-geometry`, `threejs-materials`, `threejs-lighting`, `threejs-animation`, `threejs-interaction`, `frontend-design`, `web-design-guidelines`. They are third-party files (MIT, and Apache-2.0 for `frontend-design`, whose `LICENSE.txt` is kept). Prettier ignores them. Add more with `npx skills add <owner/repo> -s <skill> -a claude-code --copy -y` run from the repo root (no `-g`), and review the SKILL.md before committing it.
 
 - The plan's restrained, glassy, serif look (sections 6 and 7) overrides `frontend-design`'s bolder defaults.
 - The plan forbids post-processing and heavy textures, so skip anything in the three.js skills that assumes them.
@@ -58,7 +62,7 @@ Skills (global, in `~/.claude/skills`): `threejs-fundamentals`, `threejs-geometr
 
 Deliberately not set up yet:
 
-- **Supabase** project, MCP and skills (M4): a free project pauses after a week idle (plan section 9). Create the project at M4, then connect the MCP scoped and read-only: `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=<ref>&read_only=true"`, and install `supabase/agent-skills`.
+- **Supabase** project, MCP and skills (M4): a free project pauses after a week idle (plan section 9). Create the project at M4, then add the MCP scoped and read-only: `claude mcp add --scope project --transport http supabase "https://mcp.supabase.com/mcp?project_ref=<ref>&read_only=true"`, and install `supabase/agent-skills` the same way as above.
 - **Vercel MCP**: gives the agent the full access of Wajid's Vercel account, so use the Vercel CLI (`vercel login`, then `vercel logs` / `vercel inspect`) instead.
 - Remaining three.js skills (`threejs-loaders`, `threejs-textures`, `threejs-shaders`): add when models or custom shaders appear.
 
