@@ -9,6 +9,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import { smoothstep } from './coastShape';
 import { SKY } from './config';
 import { PALETTE, SUN_LIGHT, color } from './palette';
 
@@ -52,9 +53,4 @@ export function createSky(): Mesh {
   sky.renderOrder = -1; // draw first, everything else paints over it
   sky.frustumCulled = false;
   return sky;
-}
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
-  return t * t * (3 - 2 * t);
 }

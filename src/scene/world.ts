@@ -1,11 +1,14 @@
-// Builds the always-on 3D backdrop: renderer, camera, sky, sea, lights, and the render loop.
+// Builds the always-on 3D backdrop: renderer, camera, sky, ground, sea, lights, and the render loop.
 // It only draws. It never reads game state yet (later the sim's output will drive it).
 import { Fog, PerspectiveCamera, Scene, Timer, WebGLRenderer } from 'three';
+import { placeCamera } from './camera';
 import { CAMERA, FOG } from './config';
+import { debugAnchorMarkers, debugStartX } from './debug';
 import { createLights } from './lights';
 import { PALETTE, color } from './palette';
 import { createSea } from './sea';
 import { createSky } from './sky';
+import { createTerrain } from './terrain';
 
 export interface World {
   dispose(): void;
@@ -22,18 +25,22 @@ export function createWorld(container: HTMLElement): World {
   scene.fog = new Fog(color(PALETTE.haze), FOG.near, FOG.far);
 
   const camera = new PerspectiveCamera(CAMERA.fov, 1, CAMERA.near, CAMERA.far);
-  camera.position.set(...CAMERA.position);
-  camera.lookAt(...CAMERA.target);
+  placeCamera(camera, debugStartX() ?? CAMERA.startX);
 
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sky = createSky();
+  const terrain = createTerrain();
   const sea = createSea(calm);
-  scene.add(sky, sea.mesh, createLights());
+  scene.add(sky, terrain.mesh, sea.mesh, createLights());
+
+  const markers = debugAnchorMarkers();
+  if (markers) scene.add(markers);
 
   const resize = () => {
     const { clientWidth: width, clientHeight: height } = container;
     renderer.setSize(width, height, false); // false: the canvas size is set by CSS
     camera.aspect = width / height;
+    camera.fov = camera.aspect < 1 ? CAMERA.fovPortrait : CAMERA.fov;
     camera.updateProjectionMatrix();
   };
   const observer = new ResizeObserver(resize);
@@ -46,7 +53,7 @@ export function createWorld(container: HTMLElement): World {
 
   renderer.setAnimationLoop((time) => {
     timer.update(time);
-    sea.update(timer.getElapsed(), camera.position.x);
+    sea.update(timer.getElapsed());
     sky.position.copy(camera.position); // the dome travels with the camera: no visible edge
     renderer.render(scene, camera);
   });
@@ -56,6 +63,7 @@ export function createWorld(container: HTMLElement): World {
       renderer.setAnimationLoop(null);
       observer.disconnect();
       timer.dispose();
+      terrain.dispose();
       sea.dispose();
       renderer.dispose();
       renderer.domElement.remove();

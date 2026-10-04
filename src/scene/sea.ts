@@ -1,43 +1,77 @@
-// Animated low-poly sea. One flat-shaded plane whose vertices are pushed up and down by a few
-// sine waves in the vertex shader. Because the shader moves the vertices *before* Three.js works
-// out each face's normal, every wave facet is lit as a separate flat triangle (the low-poly look)
-// and the CPU does no per-vertex work.
-import { Mesh, MeshLambertMaterial, PlaneGeometry } from 'three';
-import { SEA } from './config';
+// Animated low-poly sea, drawn as translucent water over the seabed so the sand shows through
+// in the shallows and the water turns deeper teal further out.
+//
+// Each facet's colour and see-through-ness are baked from the water depth (grid.ts). The waves are
+// a few sines in the vertex shader. Because the shader moves the vertices *before* Three.js works
+// out each face's normal, every wave facet is lit as a flat triangle (the low-poly look) and the
+// CPU does no per-vertex work. A soft foam line breathes in and out along the waterline.
+import { Color, Mesh, MeshLambertMaterial } from 'three';
+import { GRID, SEA } from './config';
+import { smoothstep, terrainHeight } from './coastShape';
+import { axis, buildFacetedGrid, hash } from './grid';
 import { PALETTE, color } from './palette';
 
 export interface Sea {
   mesh: Mesh;
-  /** Call every frame. `cameraX` lets the plane follow the camera as it pans along the coast. */
-  update(elapsedSeconds: number, cameraX: number): void;
+  /** Call every frame with the elapsed time in seconds. */
+  update(elapsedSeconds: number): void;
   dispose(): void;
 }
 
 export function createSea(calm: boolean): Sea {
-  const cell = SEA.size / SEA.segments;
-  const geometry = new PlaneGeometry(SEA.size, SEA.size, SEA.segments, SEA.segments);
-  // Lay it flat in the geometry itself (not via mesh.rotation) so the shader's local +y is "up".
-  geometry.rotateX(-Math.PI / 2);
-  geometry.translate(0, 0, -SEA.size / 2 + SEA.behindCamera);
+  const deep = color(PALETTE.sea);
+  // Clear aqua shallows (a derived tone, not a 7th palette colour) laid over the sandy seabed.
+  const shallow = deep.clone().lerp(new Color('#bfe8e0'), 0.5);
+  const foamColor = color(PALETTE.haze).lerp(new Color(1, 1, 1), 0.6);
+
+  const geometry = buildFacetedGrid({
+    xs: axis(GRID.x),
+    zs: axis(GRID.seaZ),
+    jitter: GRID.jitter,
+    vertexY: () => 0, // flat; the shader makes the waves
+    // Water depth at each vertex (sea level minus ground height). Negative means dry land.
+    extra: { name: 'aDepth', value: (x, z) => -terrainHeight(x, z) },
+    alpha: true,
+    faceColor(a, b, c) {
+      // Leave out facets that are well under dry land, they would never be seen.
+      if (Math.max(a.extra, b.extra, c.extra) < -0.6) return null;
+
+      const depth = (a.extra + b.extra + c.extra) / 3;
+      const tone = shallow.clone().lerp(deep, smoothstep(0, 2.2, depth));
+      tone.multiplyScalar(0.97 + hash(Math.round(a.x * 10), Math.round(a.z * 10), 3) * 0.06);
+      const opacity = 0.35 + 0.6 * smoothstep(0, 1.8, depth); // shallow = see-through
+      return [tone.r, tone.g, tone.b, opacity];
+    },
+  });
 
   const factor = calm ? SEA.calmFactor : 1;
   const uTime = { value: 0 };
   const uHeight = { value: SEA.waveHeight * factor };
+  const uFoam = { value: foamColor };
 
-  const material = new MeshLambertMaterial({ color: color(PALETTE.sea), flatShading: true });
+  const material = new MeshLambertMaterial({
+    vertexColors: true,
+    flatShading: true,
+    transparent: true,
+    depthWrite: false, // one see-through layer; the seabed behind it must stay visible
+  });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = uTime;
     shader.uniforms.uHeight = uHeight;
+    shader.uniforms.uFoam = uFoam;
 
     shader.vertexShader = injectAfter(
       shader.vertexShader,
       '#include <common>',
       `uniform float uTime;
        uniform float uHeight;
-       varying float vCrest;`,
+       attribute float aDepth;
+       varying float vCrest;
+       varying float vDepth;
+       varying float vAlong;`,
     );
-    // Waves are a function of the vertex's world position, so they stay put when the plane
-    // slides along with the camera. Three sines with different directions look like a swell.
+    // Waves are a function of the vertex's world position. Three sines with different directions
+    // look like a swell. They shrink to a gentle lap in the shallows so the waterline stays tidy.
     shader.vertexShader = injectAfter(
       shader.vertexShader,
       '#include <begin_vertex>',
@@ -45,23 +79,34 @@ export function createSea(calm: boolean): Sea {
        float swell = sin(seaWorld.x * 0.35 + uTime * 0.9) * 0.5
                    + sin(seaWorld.z * 0.50 + uTime * 0.7) * 0.35
                    + sin((seaWorld.x + seaWorld.z) * 0.80 + uTime * 1.3) * 0.15;
-       transformed.y += swell * uHeight;
-       vCrest = swell;`,
+       transformed.y += swell * uHeight * (0.2 + 0.8 * smoothstep(0.0, 1.6, aDepth));
+       vCrest = swell;
+       vDepth = aDepth;
+       vAlong = seaWorld.x;`,
     );
 
     shader.fragmentShader = injectAfter(
       shader.fragmentShader,
       '#include <common>',
-      'varying float vCrest;',
+      `uniform float uTime;
+       uniform vec3 uFoam;
+       varying float vCrest;
+       varying float vDepth;
+       varying float vAlong;`,
     );
-    // Crests a touch lighter, troughs a touch darker: depth without any texture.
+    // Crests a touch lighter, troughs a touch darker. Then the foam: a pale band where the water is
+    // shallower than a threshold that slowly breathes in and out along the shore.
     // Past the fog distance the sea is pure haze colour, identical to the sky dome behind it, so
     // skip those pixels. Far triangles are smaller than a pixel, and their flat-shading normal
     // can come out as NaN, which showed up as dark specks along the horizon.
     shader.fragmentShader = injectAfter(
       shader.fragmentShader,
       '#include <color_fragment>',
-      `diffuseColor.rgb *= 0.9 + 0.2 * vCrest;
+      `diffuseColor.rgb *= 0.92 + 0.16 * vCrest;
+       float foamEdge = 0.2 + 0.1 * sin(uTime * 0.9 + vAlong * 0.3);
+       float foam = 1.0 - smoothstep(foamEdge * 0.35, foamEdge, vDepth);
+       diffuseColor.rgb = mix(diffuseColor.rgb, uFoam, foam * 0.85);
+       diffuseColor.a = max(diffuseColor.a, foam * 0.9);
        #if defined( USE_FOG ) && !defined( FOG_EXP2 )
          if ( vFogDepth > fogFar ) discard;
        #endif`,
@@ -73,10 +118,8 @@ export function createSea(calm: boolean): Sea {
 
   return {
     mesh,
-    update(elapsedSeconds, cameraX) {
+    update(elapsedSeconds) {
       uTime.value = elapsedSeconds * SEA.waveSpeed * factor;
-      // Snap to whole cells so the triangles never visibly slide under the waves.
-      mesh.position.x = Math.round(cameraX / cell) * cell;
     },
     dispose() {
       geometry.dispose();
