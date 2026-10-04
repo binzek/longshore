@@ -23,6 +23,10 @@ export interface CameraRig {
   dispose(): void;
 }
 
+/** Controls that use the arrow keys themselves. */
+const OWN_ARROW_KEYS =
+  'input, select, textarea, [contenteditable], [role="radio"], [role="slider"]';
+
 /**
  * `surface` is the element that receives the drags. Pass the whole scene container (not just the
  * canvas) so a press that starts on a glass marker still pans the coast.
@@ -101,6 +105,9 @@ export function createCameraRig(
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
+    // Arrow keys inside a radio group, slider or text field belong to that control, not the camera.
+    const target = event.target;
+    if (target instanceof Element && target.closest(OWN_ARROW_KEYS)) return;
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') keysDown.add(event.key);
   };
   const onKeyUp = (event: KeyboardEvent) => {

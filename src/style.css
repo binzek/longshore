@@ -70,6 +70,19 @@ body {
   cursor: grabbing;
 }
 
+/* Text for screen readers only (for example a group's name when the question above already says it). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .fallback {
   margin: 0;
   padding: 2rem;

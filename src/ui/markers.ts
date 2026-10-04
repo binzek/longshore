@@ -1,10 +1,10 @@
 // The five glass markers that hover over each role's spot on the coast. Each is a real <button>
 // (keyboard focus, screen-reader name) laid over the canvas, moved every frame to follow its spot.
 // The scene says where each one belongs (`update`); this file never touches Three.js.
-import roleText from '../data/roles.en.json';
 import type { RoleId } from '../sim/roles/types';
-import { ROLE_ICONS } from './roleIcons';
 import './markers.css';
+import { ROLE_ICONS } from './roleIcons';
+import { ROLE_TEXT } from './roleText';
 
 /** Where a marker belongs on screen (pixels from the top-left), and whether it is in view. */
 export interface MarkerSpot {
@@ -23,6 +23,8 @@ export interface RoleMarkers {
   update(project: (id: RoleId) => MarkerSpot): void;
   /** Highlight one role's marker, or none. */
   select(id: RoleId | null): void;
+  /** Move keyboard focus to a role's marker, or to the marker layer if that marker is off screen. */
+  focus(id: RoleId): void;
 }
 
 interface Marker {
@@ -46,7 +48,7 @@ export function createRoleMarkers(options: {
   layer.tabIndex = -1; // not a Tab stop, but it can be focused from code (see show())
 
   const markers: Marker[] = options.order.map((id, index) => {
-    const label = roleText[id].label;
+    const label = ROLE_TEXT[id].label;
 
     const root = document.createElement('div');
     root.className = 'marker';
@@ -119,6 +121,15 @@ export function createRoleMarkers(options: {
     select(id) {
       for (const marker of markers) {
         marker.button.setAttribute('aria-pressed', String(marker.id === id));
+      }
+    },
+    focus(id) {
+      const marker = markers.find((m) => m.id === id);
+      // An off-screen marker is hidden and cannot take focus, so fall back to the layer.
+      if (marker?.root.classList.contains('is-on-screen')) {
+        marker.button.focus({ preventScroll: true });
+      } else {
+        layer.focus({ preventScroll: true });
       }
     },
   };

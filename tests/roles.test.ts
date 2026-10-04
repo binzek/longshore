@@ -6,6 +6,7 @@ import {
   ROLES,
   ROLE_IDS,
   actEffect,
+  actScore,
   choiceEffect,
   clampChoice,
   decisionsForAct,
@@ -15,6 +16,7 @@ import {
   type Choice,
   type Decision,
   type Effect,
+  type RoleConfig,
   type RoleId,
 } from '../src/sim/roles';
 
@@ -270,5 +272,37 @@ describe('choiceEffect and actEffect', () => {
     const role = ROLES.shack;
     const choices = role.decisions.map(defaultChoice);
     expect(actEffect(role, 1, choices)).toEqual(actEffect(role, 1, choices));
+  });
+});
+
+describe('actScore', () => {
+  it('is the starting score plus the act gains (shack: 40, then steel 2, local fish 2, fans 2)', () => {
+    const shack = ROLES.shack;
+    expect(actScore(shack, 1, [])).toBe(46); // nothing touched: the defaults
+    const greedy: Choice = {
+      decisionId: 'menu',
+      widget: 'toggleSet',
+      picks: { plates: 'single', fish: 'trucked', cooling: 'ac' },
+    };
+    expect(actScore(shack, 1, [greedy])).toBe(54); // 40 + 5 + 4 + 5
+  });
+
+  it('never goes below 0 or above 100', () => {
+    const role = (start: number, gain: number): RoleConfig => ({
+      id: 'fisher',
+      privateScoreStart: start,
+      exposure: { fishStock: 1 },
+      decisions: [
+        {
+          id: 'only',
+          act: 1,
+          widget: 'cardDraft',
+          default: 'x',
+          cards: [{ id: 'x', effect: { privateGain: gain, stewardship: {} } }],
+        },
+      ],
+    });
+    expect(actScore(role(98, 5), 1, [])).toBe(100);
+    expect(actScore(role(2, -6), 1, [])).toBe(0);
   });
 });

@@ -137,3 +137,13 @@ export function actEffect(role: RoleConfig, act: Act, choices: readonly Choice[]
   }
   return total;
 }
+
+/**
+ * The role's private score after an act's choices: its starting score plus this act's private
+ * gains, kept between 0 and 100. (From M2, simulate() also applies the Act 2 exposure multiplier,
+ * plan 2.6.)
+ */
+export function actScore(role: RoleConfig, act: Act, choices: readonly Choice[]): number {
+  const gain = actEffect(role, act, choices).privateGain;
+  return Math.min(100, Math.max(0, role.privateScoreStart + gain));
+}

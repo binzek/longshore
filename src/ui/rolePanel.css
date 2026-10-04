@@ -1,0 +1,162 @@
+/* The role panel. On a phone it is a sheet along the bottom; on a wide screen a card down the right
+   side. Mostly opaque on purpose: body text has to stay readable over a moving sea, and a big
+   blurred surface is the costliest kind of glass on a low-end phone. */
+.panel.glass {
+  position: fixed;
+  z-index: 8; /* above the markers (5) and below the sound toggle (20) */
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  max-height: min(56dvh, 36rem);
+  border-radius: 1.25rem;
+  color: var(--ink);
+  background: rgb(250 243 230 / 0.84);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  backdrop-filter: blur(8px) saturate(1.1);
+  /* Hidden until opened. The fade is on the glass itself, as with the markers. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  /* Visibility waits until the fade-out has finished when closing, but flips at once when opening:
+     a hidden element cannot take keyboard focus, and we focus the panel the moment it opens. */
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+.panel.glass.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.panel:focus {
+  outline: none; /* a region that is only focused from code; its controls show their own rings */
+}
+
+@media (min-width: 720px) {
+  .panel.glass {
+    left: auto;
+    right: 1rem;
+    top: 4.5rem; /* clear of the sound button */
+    bottom: 1rem;
+    width: 23rem;
+    max-height: none;
+    transform: translateX(16px);
+  }
+
+  .panel.glass.is-open {
+    transform: none;
+  }
+}
+
+.panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem 0.6rem 1.1rem;
+}
+
+.panel__title {
+  margin: 0;
+  font-family: var(--font-display); /* Fraunces: titles and labels only, never changing numbers */
+  font-weight: 300;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.panel__blurb {
+  margin: 0.25rem 0 0;
+  font: italic 400 1rem/1.3 var(--font-text);
+  opacity: 0.8;
+}
+
+.panel__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel__close:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.panel__close svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* The decisions scroll inside the panel (the page itself never scrolls). */
+.panel__body {
+  display: grid;
+  gap: 1.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.4rem 1.1rem 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.decision__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.1rem;
+}
+
+.decision__prompt {
+  margin: 0.2rem 0 0.7rem;
+  font: italic 400 1rem/1.3 var(--font-text);
+  opacity: 0.85;
+}
+
+.decision__soon {
+  margin: 0;
+  font: italic 400 0.95rem/1.3 var(--font-text);
+  opacity: 0.6;
+}
+
+.panel__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1.1rem 0.85rem;
+  border-top: 1px solid rgb(30 47 54 / 0.12);
+}
+
+.panel__score-name {
+  font: italic 400 1rem/1.2 var(--font-text);
+}
+
+/* Newsreader digits are all the same width, so the number does not jitter when it changes. */
+.panel__score {
+  font: 400 1.6rem/1 var(--font-text);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel.glass {
+    transform: none;
+    transition: none; /* appears and disappears at once */
+  }
+}

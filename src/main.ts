@@ -1,14 +1,17 @@
 import '@fontsource/fraunces/latin-300.css'; // title and buttons
-import '@fontsource/newsreader/latin-400-italic.css'; // tagline
+import '@fontsource/newsreader/latin-400-italic.css'; // tagline, hints, captions
+import '@fontsource/newsreader/latin-400.css'; // panel text and numbers
 import './style.css';
 import { createAmbience } from './audio/ambience';
 import { loadSoundOn, saveSoundOn } from './audio/preference';
+import { createChoiceStore } from './game/choiceStore';
 import { applyPaletteToCss } from './scene/palette';
 import { PAN } from './scene/config';
 import { debugExpose } from './scene/debug';
 import { ROLE_ANCHORS } from './scene/layout';
 import { createWorld } from './scene/world';
 import { createRoleMarkers } from './ui/markers';
+import { createRolePanel } from './ui/rolePanel';
 import { createSoundToggle } from './ui/soundToggle';
 import { initTitleScreen } from './ui/titleScreen';
 
@@ -36,8 +39,8 @@ title.onBegin(() => {
 });
 debugExpose({ ambience });
 
-// The loading bar waits for four real things: two fonts, the coast being built, its first frame.
-const LOAD_STEPS = 4;
+// The loading bar waits for five real things: three fonts, the coast being built, its first frame.
+const LOAD_STEPS = 5;
 let finished = 0;
 const finishStep = () => {
   finished += 1;
@@ -52,9 +55,11 @@ const loadFont = (descriptor: string) =>
     .catch(() => [])
     .then(finishStep);
 
+// The title's text only waits for its own two fonts; the roman Newsreader (panels) loads alongside.
 Promise.all([loadFont('300 1em Fraunces'), loadFont('italic 400 1em Newsreader')]).then(
   title.revealText,
 );
+loadFont('400 1em Newsreader');
 
 // Let the empty bar paint first: building the coast takes a moment and blocks the page while it runs.
 requestAnimationFrame(() =>
@@ -62,13 +67,31 @@ requestAnimationFrame(() =>
     try {
       const world = createWorld(app);
 
+      // Tapping a marker opens that role's panel; tapping it again, or closing the panel, closes it.
+      // For now any role's panel can be edited. Step 5 locks the player to the one role they chose
+      // and hands the other four to the bots.
+      const store = createChoiceStore();
+      const panel = createRolePanel({
+        store,
+        onClose: (id) => {
+          markers.select(null);
+          markers.focus(id);
+        },
+      });
+
       // Glass markers over each role's spot. They follow the camera, and appear after Begin.
       const markers = createRoleMarkers({
         container: app,
         order: ROLE_ANCHORS.map((anchor) => anchor.id),
         tapSlopPx: PAN.tapSlopPx,
-        // Step 3 opens the role's panel here. For now a tap just highlights that marker.
-        onSelect: (id) => markers.select(id),
+        onSelect: (id) => {
+          if (panel.current === id) {
+            panel.close();
+          } else {
+            markers.select(id);
+            panel.open(id);
+          }
+        },
       });
       world.onFrame(() => markers.update(world.projectRole));
       title.onBegin(markers.show);
