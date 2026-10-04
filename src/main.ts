@@ -5,11 +5,14 @@ import './style.css';
 import { createAmbience } from './audio/ambience';
 import { loadSoundOn, saveSoundOn } from './audio/preference';
 import { createChoiceStore } from './game/choiceStore';
+import narration from './data/narration.en.json';
+import uiText from './data/ui.en.json';
 import { applyPaletteToCss } from './scene/palette';
 import { PAN } from './scene/config';
 import { debugExpose } from './scene/debug';
 import { ROLE_ANCHORS } from './scene/layout';
 import { createWorld } from './scene/world';
+import { createIntro } from './ui/intro';
 import { createRoleMarkers } from './ui/markers';
 import { createRolePanel } from './ui/rolePanel';
 import { createSoundToggle } from './ui/soundToggle';
@@ -94,7 +97,11 @@ requestAnimationFrame(() =>
         },
       });
       world.onFrame(() => markers.update(world.projectRole));
-      title.onBegin(markers.show);
+
+      // After Begin the intro lines play over the coast; the markers appear when it ends or is skipped.
+      const intro = createIntro(narration.intro, uiText.intro.skip);
+      title.onBegin(intro.start);
+      intro.onDone(markers.show);
 
       finishStep();
       world.firstFrame.then(finishStep);

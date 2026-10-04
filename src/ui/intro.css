@@ -1,0 +1,84 @@
+/* The intro narration: calm serif lines straight over the coast (like the title), and a small
+   Skip button. The overlay ignores the pointer so the coast can still be dragged. */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9; /* under the fading title screen (10), above the markers (5) and panel (8) */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(14vh, env(safe-area-inset-top)) 1.5rem max(6vh, env(safe-area-inset-bottom));
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+
+.intro[hidden] {
+  display: none;
+}
+
+.intro.is-leaving {
+  opacity: 0;
+}
+
+.intro__line {
+  position: relative;
+  isolation: isolate;
+  max-width: 28rem;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.3rem, 5.4vw, 2rem);
+  line-height: 1.35;
+  color: var(--ink);
+  text-shadow: 0 0 22px rgb(255 240 215 / 0.85);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s ease;
+}
+
+.intro__line.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* A soft warm glow behind the words keeps them readable over sand, sea or sky. */
+.intro__line::before {
+  content: '';
+  position: absolute;
+  inset: -1.5rem -2rem;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgb(255 244 224 / 0.55), transparent 70%);
+}
+
+.intro__skip {
+  min-width: 6rem;
+  min-height: 2.75rem; /* 44 px tap target */
+  padding: 0.5rem 1.6rem;
+  border-radius: 999px;
+  font: 300 0.95rem/1 var(--font-display);
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.intro__skip:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .intro__line {
+    transition-duration: 0.01s;
+  }
+  .intro__line {
+    transform: none;
+  }
+}

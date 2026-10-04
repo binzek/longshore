@@ -1,5 +1,11 @@
 {
   "title": {
     "tagline": "Five people. One coast. Same tide."
-  }
+  },
+  "intro": [
+    "Kozhikode. An ordinary evening on the coast.",
+    "Five people live and work along this shore.",
+    "Each of them makes small choices, every day.",
+    "The tide is coming, the same for everyone. What you decide shapes how much of it the coast can bear."
+  ]
 }
