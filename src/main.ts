@@ -1,19 +1,19 @@
-// Baseline smoke test only. M0 replaces this with the title screen and the 3D coast.
-// It proves the whole chain works on a real phone: hosting -> bundle -> Three.js -> WebGL.
-import { REVISION, WebGLRenderer } from 'three';
 import './style.css';
+import { applyPaletteToCss } from './scene/palette';
+import { createWorld } from './scene/world';
 
-function webglStatus(): string {
-  try {
-    const canvas = document.createElement('canvas');
-    const renderer = new WebGLRenderer({ canvas });
-    const isWebGL2 = renderer.capabilities.isWebGL2;
-    renderer.dispose();
-    return isWebGL2 ? 'WebGL 2 ok' : 'WebGL 1 only';
-  } catch {
-    return 'WebGL unavailable';
-  }
+const app = document.querySelector<HTMLElement>('#app');
+if (!app) throw new Error('Missing #app element in index.html');
+
+applyPaletteToCss();
+
+try {
+  createWorld(app);
+} catch (error) {
+  // No WebGL (very old phone, blocked GPU): show a plain message, never a blank page.
+  console.error(error);
+  const message = document.createElement('p');
+  message.className = 'fallback';
+  message.textContent = 'Longshore needs WebGL to draw the coast. Please try another browser.';
+  app.replaceChildren(message);
 }
-
-const status = document.querySelector<HTMLElement>('#status');
-if (status) status.textContent = `three r${REVISION} · ${webglStatus()}`;
